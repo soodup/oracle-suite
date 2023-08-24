@@ -17,6 +17,7 @@ package ethereum
 
 import (
 	"fmt"
+	"math/big"
 	"net/http"
 	"os"
 	"regexp"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/defiweb/go-eth/rpc"
 	"github.com/defiweb/go-eth/rpc/transport"
+	"github.com/defiweb/go-eth/txmodifier"
 	"github.com/defiweb/go-eth/types"
 	"github.com/defiweb/go-eth/wallet"
 	"github.com/hashicorp/hcl/v2"
@@ -37,9 +39,10 @@ import (
 const LoggerTag = "CONFIG_ETHEREUM"
 
 const (
-	splitterVirtualHost    = "rpc-splitter"
-	defaultTotalTimeout    = 10
-	defaultGracefulTimeout = 1
+	splitterVirtualHost       = "rpc-splitter"
+	defaultTotalTimeout       = 10
+	defaultGracefulTimeout    = 1
+	defaultGasLimitMultiplier = 1.25
 )
 
 type (
@@ -129,6 +132,14 @@ type ConfigClient struct {
 
 	// ChainID is the chain ID to use for signing transactions.
 	ChainID uint64 `hcl:"chain_id,optional"`
+
+	// Transaction configuration:
+	TransactionType          string   `hcl:"tx_type,optional"`
+	GasFeeMultiplier         float64  `hcl:"gas_fee_multiplier,optional"`
+	GasPriorityFeeMultiplier float64  `hcl:"gas_priority_fee_multiplier,optional"`
+	MaxGasFee                *big.Int `hcl:"max_gas_fee,optional"`
+	MaxGasPriorityFee        *big.Int `hcl:"max_gas_priority_fee,optional"`
+	MaxGasLimit              *big.Int `hcl:"max_gas_limit,optional"`
 
 	// HCL fields:
 	Range   hcl.Range       `hcl:",range"`
@@ -357,7 +368,13 @@ func (c *ConfigClient) Client(logger log.Logger, keys KeyRegistry) (rpc.RPC, err
 	if err != nil {
 		return nil, err
 	}
-	opts := []rpc.ClientOptions{rpc.WithTransport(rpcTransport)}
+	opts := []rpc.ClientOptions{
+		rpc.WithTransport(rpcTransport),
+		rpc.WithTXModifiers(
+			txmodifier.NewGasLimitEstimator(defaultGasLimitMultiplier, 0, 0),
+			txmodifier.NewNonceProvider(false),
+		),
+	}
 	if c.EthereumKey != "" {
 		key, ok := keys[c.EthereumKey]
 		if !ok {
@@ -376,6 +393,42 @@ func (c *ConfigClient) Client(logger log.Logger, keys KeyRegistry) (rpc.RPC, err
 	}
 	if c.ChainID != 0 {
 		opts = append(opts, rpc.WithChainID(c.ChainID))
+	}
+	switch c.TransactionType {
+	case "legacy":
+		opts = append(
+			opts,
+			rpc.WithTXModifiers(
+				txmodifier.NewLegacyGasFeeEstimator(
+					c.GasFeeMultiplier,
+					nil,
+					c.MaxGasFee,
+				),
+			),
+		)
+	case "eip1559":
+		opts = append(
+			opts,
+			rpc.WithTXModifiers(
+				txmodifier.NewEIP1559GasFeeEstimator(
+					c.GasFeeMultiplier,
+					c.GasPriorityFeeMultiplier,
+					nil,
+					c.MaxGasFee,
+					nil,
+					c.MaxGasPriorityFee,
+				),
+			),
+		)
+	case "":
+	// No-op.
+	default:
+		return nil, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Validation error",
+			Detail:   fmt.Sprintf("Invalid transaction type %q, must be one of: legacy, eip1559", c.TransactionType),
+			Subject:  c.Content.Attributes["tx_type"].Range.Ptr(),
+		}
 	}
 
 	for _, u := range c.RPCURLs {
