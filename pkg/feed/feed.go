@@ -83,7 +83,7 @@ func New(cfg Config) (*Feed, error) {
 	for _, model := range cfg.DataModels {
 		ll.
 			WithField("model", model).
-			Info("Data model configured")
+			Info("Data model")
 	}
 
 	g := &Feed{
@@ -154,7 +154,7 @@ func (f *Feed) broadcast(model string, point datapoint.Point) {
 		f.log.
 			WithField("model", model).
 			WithFields(point.LogFields()).
-			Warn("Unable to find handler for data point")
+			Warn("Unable to find signer for data point")
 	}
 }
 
@@ -180,7 +180,14 @@ func (f *Feed) broadcasterRoutine() {
 				if err != nil {
 					f.log.
 						WithError(err).
-						Error("Unable to get data points")
+						Error("Unable to get data point")
+					continue
+				}
+				if err := point.Validate(); err != nil {
+					f.log.
+						WithError(err).
+						WithFields(point.LogFields()).
+						Error("Unable to broadcast data point, data point is invalid")
 					continue
 				}
 				f.broadcast(model, point)
