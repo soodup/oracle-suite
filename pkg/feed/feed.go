@@ -17,6 +17,7 @@ package feed
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/chronicleprotocol/oracle-suite/pkg/datapoint"
@@ -53,9 +54,12 @@ type Config struct {
 	DataProvider datapoint.Provider
 
 	// Signers is a list of signers used to sign data points.
+	//
+	// If none of the provided signers can sign the data point, it will be
+	// skipped.
 	Signers []datapoint.Signer
 
-	// Transport is an implementation of transport used to send prices to
+	// Transport is an implementation of transport used to send data points to
 	// the network.
 	Transport transport.Service
 
@@ -72,30 +76,31 @@ func New(cfg Config) (*Feed, error) {
 	if cfg.DataModels == nil {
 		return nil, errors.New("data provider must not be nil")
 	}
+	if cfg.DataProvider == nil {
+		return nil, errors.New("data provider must not be nil")
+	}
 	if cfg.Transport == nil {
 		return nil, errors.New("transport must not be nil")
+	}
+	if len(cfg.DataModels) == 0 {
+		return nil, errors.New("at least one data model must be provided")
+	}
+	if len(cfg.Signers) == 0 {
+		return nil, errors.New("at least one signer must be provided")
 	}
 	if cfg.Logger == nil {
 		cfg.Logger = null.New()
 	}
-
-	ll := cfg.Logger.WithField("tag", LoggerTag)
-	for _, model := range cfg.DataModels {
-		ll.
-			WithField("model", model).
-			Info("Data model")
-	}
-
-	g := &Feed{
+	f := &Feed{
 		waitCh:       make(chan error),
-		log:          ll,
+		log:          cfg.Logger.WithField("tag", LoggerTag),
 		dataProvider: cfg.DataProvider,
 		dataModels:   cfg.DataModels,
 		signers:      cfg.Signers,
 		transport:    cfg.Transport,
 		interval:     cfg.Interval,
 	}
-	return g, nil
+	return f, nil
 }
 
 // Start implements the supervisor.Service interface.
@@ -106,9 +111,13 @@ func (f *Feed) Start(ctx context.Context) error {
 	if ctx == nil {
 		return errors.New("context must not be nil")
 	}
-	f.log.Debug("Starting")
 	f.ctx = ctx
-	f.interval.Start(f.ctx)
+	f.log.
+		WithFields(log.Fields{
+			"dataModels": f.dataModels,
+			"interval":   f.interval.Duration(),
+		}).
+		Debug("Starting")
 	go f.broadcasterRoutine()
 	go f.contextCancelHandler()
 	return nil
@@ -159,14 +168,14 @@ func (f *Feed) broadcast(model string, point datapoint.Point) {
 }
 
 func (f *Feed) broadcasterRoutine() {
+	f.interval.Start(f.ctx)
 	for {
 		select {
 		case <-f.ctx.Done():
 			return
 		case <-f.interval.TickCh():
-			// Fetch all data points from the provider to update them
-			// at once.
-			_, err := f.dataProvider.DataPoints(f.ctx, f.dataModels...)
+			// Fetch data points from the data provider.
+			points, err := f.dataProvider.DataPoints(f.ctx, f.dataModels...)
 			if err != nil {
 				f.log.
 					WithError(err).
@@ -175,15 +184,16 @@ func (f *Feed) broadcasterRoutine() {
 			}
 
 			// Send data points to the network.
-			for _, model := range f.dataModels {
-				point, err := f.dataProvider.DataPoint(f.ctx, model)
-				if err != nil {
-					f.log.
-						WithError(err).
-						Error("Unable to get data point")
-					continue
-				}
+			for model, point := range points {
 				if err := point.Validate(); err != nil {
+					if log.IsLevel(f.log, log.Debug) {
+						trace, _ := json.Marshal(point)
+						f.log.
+							WithError(err).
+							WithFields(point.LogFields()).
+							WithField("trace", string(trace)).
+							Debug("Invalid data point trace")
+					}
 					f.log.
 						WithError(err).
 						WithFields(point.LogFields()).

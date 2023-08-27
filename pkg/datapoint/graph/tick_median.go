@@ -104,7 +104,7 @@ func (n *TickMedianNode) DataPoint() datapoint.Point {
 			Time:      time.Now(),
 			SubPoints: points,
 			Meta:      n.Meta(),
-			Error:     fmt.Errorf("not enough values to calculate median, want %d got %d", n.min, len(ticks)),
+			Error:     fmt.Errorf("not enough values to calculate median, want %d, got %d", n.min, len(ticks)),
 		}
 	}
 
