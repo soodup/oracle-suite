@@ -69,6 +69,7 @@ func NewMuSigStore(cfg MuSigStoreConfig) *MuSigStore {
 		scribeDataModels:   cfg.ScribeDataModels,
 		opScribeDataModels: cfg.OpScribeDataModels,
 		signatures:         make(map[storeKey]*messages.MuSigSignature),
+		opSignatures:       make(map[storeKey]*messages.MuSigOptimisticSignature),
 	}
 }
 

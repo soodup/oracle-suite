@@ -211,6 +211,7 @@ func (m *MuSigSignature) toProtobuf() *pb.MuSigSignatureMessage {
 		ComputedAtTimestamp: m.ComputedAt.Unix(),
 		MsgType:             m.MsgType,
 		MsgBody:             m.MsgBody.Bytes(),
+		MsgMeta:             m.MsgMeta,
 		Commitment:          m.Commitment.Bytes(),
 		Signers:             make([][]byte, len(m.Signers)),
 		SchnorrSignature:    m.SchnorrSignature.Bytes(),

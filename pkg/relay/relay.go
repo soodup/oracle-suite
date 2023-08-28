@@ -210,7 +210,7 @@ func New(cfg Config) (*Relay, error) {
 	}
 	for _, s := range cfg.OptimisticScribes {
 		r.opScribes = append(r.opScribes, &opScribeWorker{
-			log:        nil,
+			log:        logger,
 			muSigStore: s.MuSigStore,
 			contract:   contract.NewOpScribe(s.Client, s.ContractAddress),
 			dataModel:  s.DataModel,
