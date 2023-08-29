@@ -233,7 +233,7 @@ func (p *Store) handlePointMessage(msg transport.ReceivedMessage) {
 		p.log.
 			WithFields(transport.ReceivedMessageFields(msg)).
 			WithField("model", point.Model).
-			Warn("Data point rejected - model is not supported")
+			Warn("Data point rejected, model is not supported")
 		return
 	}
 	p.collectDataPoint(point)
