@@ -16,17 +16,16 @@
 package relay
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"math"
-	"math/big"
 	"time"
 
 	"github.com/defiweb/go-eth/hexutil"
 
+	"github.com/chronicleprotocol/oracle-suite/pkg/contract"
 	"github.com/chronicleprotocol/oracle-suite/pkg/log"
-	"github.com/chronicleprotocol/oracle-suite/pkg/relay/contract"
-	"github.com/chronicleprotocol/oracle-suite/pkg/util/bn"
 	"github.com/chronicleprotocol/oracle-suite/pkg/util/timeutil"
 )
 
@@ -87,21 +86,19 @@ func (w *opScribeWorker) tryUpdate(ctx context.Context) error {
 
 	// Iterate over all signatures to check if any of them can be used to update
 	// the price on the Scribe contract.
-	for _, s := range w.muSigStore.OptimisticSignaturesByDataModel(w.dataModel) {
-		// Get price and its timestamp from the signature.
-		sigValBin, ok := s.MsgMeta["val"]
-		if !ok {
+	for _, s := range w.muSigStore.SignaturesByDataModel(w.dataModel) {
+		meta := s.MsgMeta.TickV1()
+		if meta == nil {
 			continue
 		}
-		sigAgeBin, ok := s.MsgMeta["age"]
-		if !ok {
+
+		// Signature is does not contain optimistic signatures.
+		if len(meta.Optimistic) == 0 {
 			continue
 		}
-		sigVal := bn.DecFixedPointFromRawBigInt(new(big.Int).SetBytes(sigValBin), contract.ScribePricePrecision)
-		sigAge := time.Unix(new(big.Int).SetBytes(sigAgeBin).Int64(), 0)
 
 		// If the signature is older than the current price, skip it.
-		if sigAge.Before(age) {
+		if meta.Age.Before(age) {
 			continue
 		}
 
@@ -111,26 +108,18 @@ func (w *opScribeWorker) tryUpdate(ctx context.Context) error {
 		//   field.
 		// - Price differs from the current price by more than is specified in the
 		//   OracleSpread field.
-		spread := calculateSpread(val, sigVal)
+		spread := calculateSpread(val, meta.Val)
 		isExpired := time.Since(age) >= w.expiration
 		isStale := math.IsInf(spread, 0) || spread >= w.spread
 
 		// Generate signersBlob.
-		signersBlob := make([]byte, 0, len(s.Signers))
-		for _, signer := range s.Signers {
-			for j, feed := range feeds {
-				if feed == signer {
-					signersBlob = append(signersBlob, indices[j])
-					break
-				}
-			}
-		}
-
-		// If signersBlob is not the same length as the number of feeds, it
-		// means that some signers are not present in the feed list on the
-		// contract.
-		if len(signersBlob) != len(s.Signers) {
-			continue
+		// If signersBlob returns an error, it means that some signers are not
+		// present in the feed list on the contract.
+		signersBlob, err := contract.SignersBlob(s.Signers, feeds, indices)
+		if err != nil {
+			w.log.
+				WithError(err).
+				Error("Failed to generate signersBlob")
 		}
 
 		// Print logs.
@@ -147,44 +136,51 @@ func (w *opScribeWorker) tryUpdate(ctx context.Context) error {
 				"timeToExpiration": time.Since(age).String(),
 				"currentSpread":    spread,
 			}).
-			Info("Trying to update Scribe contract")
+			Info("Trying to update ScribeOptimistic contract")
 
 		// If price is stale or expired, send update.
 		if isExpired || isStale {
-			// Send *actual* transaction.
-			txHash, tx, err := w.contract.OpPoke(
-				ctx,
-				contract.PokeData{
-					Val: sigVal,
-					Age: sigAge,
-				},
-				contract.SchnorrData{
-					Signature:   s.SchnorrSignature,
-					Commitment:  s.Commitment,
-					SignersBlob: signersBlob,
-				},
-				s.ECDSASignature,
-			)
-			if err != nil {
-				return err
-			}
+			for _, optimistic := range meta.Optimistic {
+				// Verify if signersBlob is same as provided in the message.
+				if !bytes.Equal(signersBlob, optimistic.SignerIndexes) {
+					continue
+				}
 
-			w.log.
-				WithFields(log.Fields{
-					"dataModel":              w.dataModel,
-					"txHash":                 txHash,
-					"txType":                 tx.Type,
-					"txFrom":                 tx.From,
-					"txTo":                   tx.To,
-					"txChainId":              tx.ChainID,
-					"txNonce":                tx.Nonce,
-					"txGasPrice":             tx.GasPrice,
-					"txGasLimit":             tx.GasLimit,
-					"txMaxFeePerGas":         tx.MaxFeePerGas,
-					"txMaxPriorityFeePerGas": tx.MaxPriorityFeePerGas,
-					"txInput":                hexutil.BytesToHex(tx.Input),
-				}).
-				Info("Sent update to the ScribeOptimistic contract")
+				// Send *actual* transaction.
+				txHash, tx, err := w.contract.OpPoke(
+					ctx,
+					contract.PokeData{
+						Val: meta.Val,
+						Age: meta.Age,
+					},
+					contract.SchnorrData{
+						Signature:   s.SchnorrSignature,
+						Commitment:  s.Commitment,
+						SignersBlob: signersBlob,
+					},
+					optimistic.ECDSASignature,
+				)
+				if err != nil {
+					return err
+				}
+
+				w.log.
+					WithFields(log.Fields{
+						"dataModel":              w.dataModel,
+						"txHash":                 txHash,
+						"txType":                 tx.Type,
+						"txFrom":                 tx.From,
+						"txTo":                   tx.To,
+						"txChainId":              tx.ChainID,
+						"txNonce":                tx.Nonce,
+						"txGasPrice":             tx.GasPrice,
+						"txGasLimit":             tx.GasLimit,
+						"txMaxFeePerGas":         tx.MaxFeePerGas,
+						"txMaxPriorityFeePerGas": tx.MaxPriorityFeePerGas,
+						"txInput":                hexutil.BytesToHex(tx.Input),
+					}).
+					Info("Sent update to the ScribeOptimistic contract")
+			}
 		}
 	}
 
