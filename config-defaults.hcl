@@ -1,34 +1,5 @@
 variables {
-  environment  = env("CFG_ENVIRONMENT", "prod")
-  # List of supported asset symbols. This determines Feed behavior.
-  data_symbols = [
-    "AAVE/USD",
-    "ARB/USD",
-    "AVAX/USD",
-    "BNB/USD",
-    "BTC/USD",
-    "CRV/USD",
-    "DAI/USD",
-    "ETH/BTC",
-    "ETH/USD",
-    "GNO/USD",
-    "IBTA/USD",
-    "LDO/USD",
-    "LINK/USD",
-    "MATIC/USD",
-    "MKR/USD",
-    "OP/USD",
-    "RETH/USD",
-    "SDAI/DAI",
-    "SNX/USD",
-    "SOL/USD",
-    "UNI/USD",
-    "USDC/USD",
-    "USDT/USD",
-    "WBTC/USD",
-    "WSTETH/USD",
-    "YFI/USD"
-  ]
+  environment = env("CFG_ENVIRONMENT", "prod")
 
   # Default sets of Feeds to use for the app.
   # CFG_FEEDS environment variable can control which set to use.
