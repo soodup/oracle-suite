@@ -32,7 +32,7 @@ ethereum {
     labels   = ["default"]
     content {
       rpc_urls                    = var.chain_rpc_urls
-      chain_id                    = tonumber(env("CFG_CHAIN_ID", "0"))
+      chain_id                    = tonumber(env("CFG_CHAIN_ID", "1"))
       ethereum_key                = "default"
       tx_type                     = env("CFG_CHAIN_TX_TYPE", "eip1559")
       gas_priority_fee_multiplier = tonumber(env("CFG_CHAIN_GAS_FEE_MULTIPLIER", "1"))
