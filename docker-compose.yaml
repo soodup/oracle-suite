@@ -23,7 +23,6 @@ services:
   _base:
     <<: *disabled
     environment: &base
-      CFG_ITEM_SEPARATOR: "\n"
 
       CFG_ENVIRONMENT: "stage"
 
