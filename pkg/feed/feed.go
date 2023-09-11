@@ -245,10 +245,10 @@ func generateTrace(dp datapoint.Point) map[string]string {
 	trace := make(map[string]string)
 	for _, point := range recur(dp) {
 		tick, ok := point.Value.(value.Tick)
-		if !ok {
+		if !ok || point.Meta == nil || tick.Price == nil {
 			continue
 		}
-		trace[fmt.Sprintf("%s@%s", tick.Pair.String(), point.Meta["origin"])] = tick.Price.BigFloat().String()
+		trace[fmt.Sprintf("%s@%s", tick.Pair.String(), point.Meta["origin"])] = tick.Price.String()
 	}
 	return trace
 }
