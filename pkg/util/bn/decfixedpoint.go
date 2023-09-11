@@ -103,19 +103,17 @@ func (d *DecFixedPointNumber) String() string {
 		s.WriteString("-")
 		n = n[1:]
 	}
-	if d.n > 0 {
-		if len(n) <= int(d.n) {
-			s.WriteString("0.")
-			s.WriteString(strings.Repeat("0", int(d.n)-len(n)))
-			s.WriteString(strings.TrimRight(n, "0")) // remove trailing zeros
-		} else {
-			intPart := n[:len(n)-int(d.n)]
-			fractPart := strings.TrimRight(n[len(n)-int(d.n):], "0") // remove trailing zeros
-			s.WriteString(intPart)
-			if len(fractPart) > 0 {
-				s.WriteString(".")
-				s.WriteString(fractPart)
-			}
+	if len(n) <= int(d.n) {
+		s.WriteString("0.")
+		s.WriteString(strings.Repeat("0", int(d.n)-len(n)))
+		s.WriteString(strings.TrimRight(n, "0")) // remove trailing zeros
+	} else {
+		intPart := n[:len(n)-int(d.n)]
+		fractPart := strings.TrimRight(n[len(n)-int(d.n):], "0") // remove trailing zeros
+		s.WriteString(intPart)
+		if len(fractPart) > 0 {
+			s.WriteString(".")
+			s.WriteString(fractPart)
 		}
 	}
 	return s.String()
