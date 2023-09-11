@@ -21,7 +21,7 @@ func (s StaticValue) Number() *bn.FloatNumber {
 
 // Print implements the Value interface.
 func (s StaticValue) Print() string {
-	return s.Value.String()
+	return s.Value.BigFloat().Text('f', -1)
 }
 
 func (s StaticValue) MarshalJSON() ([]byte, error) {

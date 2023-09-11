@@ -248,7 +248,7 @@ func generateTrace(dp datapoint.Point) map[string]string {
 		if !ok {
 			continue
 		}
-		trace[fmt.Sprintf("%s@%s", tick.Pair.String(), point.Meta["origin"])] = tick.Price.String()
+		trace[fmt.Sprintf("%s@%s", tick.Pair.String(), point.Meta["origin"])] = tick.Price.BigFloat().Text('f', -1)
 	}
 	return trace
 }

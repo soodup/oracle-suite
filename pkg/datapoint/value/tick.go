@@ -92,12 +92,12 @@ func (t Tick) MarshalJSON() ([]byte, error) {
 	var volume24h string
 	var price string
 	if t.Price != nil {
-		price = t.Price.String()
+		price = t.Price.BigFloat().Text('f', -1)
 	}
 	if t.Volume24h != nil {
-		volume24h = t.Volume24h.String()
+		volume24h = t.Volume24h.BigFloat().Text('f', -1)
 	}
-	return json.Marshal(map[string]interface{}{
+	return json.Marshal(map[string]any{
 		"pair":      t.Pair.String(),
 		"price":     price,
 		"volume24h": volume24h,
