@@ -241,7 +241,7 @@ func dataPointValueFromProtobuf(msg *pb.DataPointValue) (value.Value, error) {
 		}
 		return val, nil
 	}
-	return nil, errors.New("unknown data point value type")
+	return nil, nil
 }
 
 func (d *DataPoint) GobEncode() ([]byte, error) {
