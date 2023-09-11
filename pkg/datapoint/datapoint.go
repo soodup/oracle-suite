@@ -180,23 +180,23 @@ func (p Point) Validate() error {
 
 // MarshalJSON implements the json.Marshaler interface.
 func (p Point) MarshalJSON() ([]byte, error) {
-	meta := make(map[string]any)
-	meta["value"] = p.Value
-	meta["time"] = p.Time.In(time.UTC).Format(time.RFC3339Nano)
+	data := make(map[string]any)
+	data["value"] = p.Value
+	data["time"] = p.Time.In(time.UTC).Format(time.RFC3339Nano)
 	var points []any
 	for _, t := range p.SubPoints {
 		points = append(points, t)
 	}
 	if len(points) > 0 {
-		meta["sub_points"] = points
+		data["sub_points"] = points
+	}
+	if len(p.Meta) > 0 {
+		data["meta"] = p.Meta
 	}
 	if err := p.Validate(); err != nil {
-		meta["error"] = err.Error()
+		data["error"] = err.Error()
 	}
-	for k, v := range p.Meta {
-		meta["meta."+k] = v
-	}
-	return json.Marshal(meta)
+	return json.Marshal(data)
 }
 
 // MarshalTrace returns a human-readable representation of the tick.

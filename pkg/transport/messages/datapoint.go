@@ -39,13 +39,21 @@ type DataPoint struct {
 	transport.AppInfo
 
 	// Model is the name of the data model.
-	Model string `json:"model"`
+	Model string
 
 	// Value is a binary representation of the data point.
-	Point datapoint.Point `json:"point"`
+	Point datapoint.Point
 
 	// Signature is the feed signature of the data point.
-	ECDSASignature types.Signature `json:"ecdsa_signature"`
+	ECDSASignature types.Signature
+}
+
+func (d DataPoint) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"model":           d.Model,
+		"point":           d.Point,
+		"ecdsa_signature": d.ECDSASignature.String(),
+	})
 }
 
 func (d *DataPoint) Marshall() ([]byte, error) {
@@ -61,7 +69,7 @@ func (d *DataPoint) Unmarshall(b []byte) error {
 }
 
 // MarshallBinary implements the transport.Message interface.
-func (d *DataPoint) MarshallBinary() ([]byte, error) {
+func (d DataPoint) MarshallBinary() ([]byte, error) {
 	var err error
 	msg := &pb.DataPointMessage{}
 	msg.Model = d.Model

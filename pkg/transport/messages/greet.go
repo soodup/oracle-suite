@@ -16,9 +16,11 @@
 package messages
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 
+	"github.com/defiweb/go-eth/hexutil"
 	"github.com/defiweb/go-eth/types"
 
 	"github.com/chronicleprotocol/oracle-suite/pkg/transport"
@@ -32,13 +34,21 @@ const GreetV1MessageName = "greet/v1"
 type Greet struct {
 	transport.AppInfo
 
-	Signature  types.Signature `json:"signature"`
-	PublicKeyX *big.Int        `json:"public_key_x"`
-	PublicKeyY *big.Int        `json:"public_key_y"`
+	Signature  types.Signature
+	PublicKeyX *big.Int
+	PublicKeyY *big.Int
+}
+
+func (e Greet) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"signature":    e.Signature.String(),
+		"public_key_x": hexutil.BigIntToHex(e.PublicKeyX),
+		"public_key_y": hexutil.BigIntToHex(e.PublicKeyY),
+	})
 }
 
 // MarshallBinary implements the transport.Message interface.
-func (e *Greet) MarshallBinary() ([]byte, error) {
+func (e Greet) MarshallBinary() ([]byte, error) {
 	var (
 		pubKeyX []byte
 		pubKeyY []byte
