@@ -32,6 +32,8 @@ import (
 
 const DataPointV1MessageName = "data_point/v1"
 
+const maxSubPointReferenceDepth = 2
+
 type DataPoint struct {
 	// Model is the name of the data model.
 	Model string `json:"model"`
@@ -60,7 +62,7 @@ func (d *DataPoint) MarshallBinary() ([]byte, error) {
 	var err error
 	msg := &pb.DataPointMessage{}
 	msg.Model = d.Model
-	msg.DataPoint, err = dataPointToProtobuf(d.Point)
+	msg.DataPoint, err = dataPointToProtobuf(d.Point, maxSubPointReferenceDepth)
 	if err != nil {
 		return nil, err
 	}
@@ -85,22 +87,26 @@ func (d *DataPoint) UnmarshallBinary(data []byte) error {
 	return nil
 }
 
-func dataPointToProtobuf(dp datapoint.Point) (*pb.DataPoint, error) {
+func dataPointToProtobuf(dp datapoint.Point, referenceDepth int) (*pb.DataPoint, error) {
 	var err error
 	msg := &pb.DataPoint{}
 	if msg.Value, err = dataPointValueToProtobuf(dp.Value); err != nil {
 		return nil, err
 	}
+	isReference := dp.Meta["type"] == "reference"
+	if isReference {
+		referenceDepth--
+	}
 	msg.Timestamp = dp.Time.Unix()
-	// FIXME: Temporary disabled due to large messages size:
-	//
-	//	msg.SubPoints = make([]*pb.DataPoint, len(dp.SubPoints))
-	//	for i, subPoint := range dp.SubPoints {
-	//		msg.SubPoints[i], err = dataPointToProtobuf(subPoint)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//	}
+	if !(isReference && referenceDepth <= 0) {
+		msg.SubPoints = make([]*pb.DataPoint, len(dp.SubPoints))
+		for i, subPoint := range dp.SubPoints {
+			msg.SubPoints[i], err = dataPointToProtobuf(subPoint, referenceDepth)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	msg.Meta = make(map[string][]byte, len(dp.Meta))
 	for k, v := range dp.Meta {
 		val, err := json.Marshal(v)
