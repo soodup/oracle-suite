@@ -75,7 +75,7 @@ type MuSigMetaTickV1 struct {
 func (m MuSigMetaTickV1) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
 		"wat":        m.Wat,
-		"val":        m.Val.BigFloat().Text('f', -1),
+		"val":        m.Val.BigFloat().String(),
 		"age":        m.Age.In(time.UTC).Format(time.RFC3339Nano),
 		"optimistic": m.Optimistic,
 		"ticks":      m.FeedTicks,
@@ -104,7 +104,7 @@ type MuSigMetaFeedTick struct {
 
 func (m MuSigMetaFeedTick) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
-		"val": m.Val.BigFloat().Text('f', -1),
+		"val": m.Val.BigFloat().String(),
 		"age": m.Age.In(time.UTC).Format(time.RFC3339Nano),
 		"vrs": m.VRS.String(),
 	})
