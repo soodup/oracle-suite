@@ -16,10 +16,12 @@
 package messages
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"time"
 
+	"github.com/defiweb/go-eth/hexutil"
 	"github.com/defiweb/go-eth/types"
 
 	"github.com/chronicleprotocol/oracle-suite/pkg/transport"
@@ -63,11 +65,21 @@ type MuSigMetaTickV1 struct {
 	// ScribeOptimistic contracts for the same asset with different signer
 	// indexes, although this is unlikely.
 
-	Wat        string                  `json:"wat"`        // Asset name.
-	Val        *bn.DecFixedPointNumber `json:"val"`        // Median price.
-	Age        time.Time               `json:"age"`        // Oldest tick timestamp.
-	Optimistic []MuSigMetaOptimistic   `json:"optimistic"` // Optimistic signatures.
-	FeedTicks  []MuSigMetaFeedTick     `json:"ticks"`      // All ticks used to calculate the median price.
+	Wat        string                  // Asset name.
+	Val        *bn.DecFixedPointNumber // Median price.
+	Age        time.Time               // Oldest tick timestamp.
+	Optimistic []MuSigMetaOptimistic   // Optimistic signatures.
+	FeedTicks  []MuSigMetaFeedTick     // All ticks used to calculate the median price.
+}
+
+func (m MuSigMetaTickV1) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"wat":        m.Wat,
+		"val":        m.Val.String(),
+		"age":        m.Age.In(time.UTC).Format(time.RFC3339Nano),
+		"optimistic": m.Optimistic,
+		"ticks":      m.FeedTicks,
+	})
 }
 
 func (m MuSigMetaTickV1) muSigMeta() {}
@@ -77,10 +89,25 @@ type MuSigMetaOptimistic struct {
 	SignerIndexes  []uint8         `json:"signer_indexes"`
 }
 
+func (m MuSigMetaOptimistic) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"ecdsa_signature": m.ECDSASignature.String(),
+		"signer_indexes":  hexutil.BytesToHex(m.SignerIndexes),
+	})
+}
+
 type MuSigMetaFeedTick struct {
-	Val *bn.DecFixedPointNumber `json:"val"` // Price.
-	Age time.Time               `json:"age"` // Price timestamp.
-	VRS types.Signature         `json:"vrs"` // Signature.
+	Val *bn.DecFixedPointNumber // Price.
+	Age time.Time               // Price timestamp.
+	VRS types.Signature         // Signature.
+}
+
+func (m MuSigMetaFeedTick) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"val": m.Val.String(),
+		"age": m.Age.In(time.UTC).Format(time.RFC3339Nano),
+		"vrs": m.VRS.String(),
+	})
 }
 
 func (m *MuSigMeta) toProtobuf() (*pb.MuSigMeta, error) {
@@ -173,16 +200,16 @@ func (m *MuSigMeta) fromProtobuf(msg *pb.MuSigMeta) error {
 
 type MuSigMessage struct {
 	// Type of the message.
-	MsgType string `json:"msg_type"`
+	MsgType string
 
 	// Message body that will be signed.
-	MsgBody types.Hash `json:"msg_body"`
+	MsgBody types.Hash
 
 	// Meta is a message-specific metadata.
-	MsgMeta MuSigMeta `json:"msg_meta"`
+	MsgMeta MuSigMeta
 
 	// Signers is a list of signers that will participate in the MuSig session.
-	Signers []types.Address `json:"signers"`
+	Signers []types.Address
 }
 
 type MuSigInitialize struct {
@@ -191,14 +218,25 @@ type MuSigInitialize struct {
 	*MuSigMessage
 
 	// SessionID is the unique ID of the MuSig session.
-	SessionID types.Hash `json:"session_id"`
+	SessionID types.Hash
 
 	// CreatedAt is the time when the session was started.
-	StartedAt time.Time `json:"started_at"`
+	StartedAt time.Time
+}
+
+func (m MuSigInitialize) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"session_id": m.SessionID.String(),
+		"started_at": m.StartedAt.In(time.UTC).Format(time.RFC3339Nano),
+		"msg_type":   m.MsgType,
+		"msg_body":   m.MsgBody.String(),
+		"msg_meta":   m.MsgMeta.Meta,
+		"signers":    m.Signers,
+	})
 }
 
 // MarshallBinary implements the transport.Message interface.
-func (m *MuSigInitialize) MarshallBinary() ([]byte, error) {
+func (m MuSigInitialize) MarshallBinary() ([]byte, error) {
 	if m.MuSigMessage == nil {
 		return nil, fmt.Errorf("empty message")
 	}
@@ -259,14 +297,21 @@ type MuSigTerminate struct {
 	transport.AppInfo
 
 	// Unique SessionID of the MuSig session.
-	SessionID types.Hash `json:"session_id"`
+	SessionID types.Hash
 
 	// Reason for terminating the MuSig session.
-	Reason string `json:"reason"`
+	Reason string
+}
+
+func (m MuSigTerminate) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"session_id": m.SessionID.String(),
+		"reason":     m.Reason,
+	})
 }
 
 // MarshallBinary implements the transport.Message interface.
-func (m *MuSigTerminate) MarshallBinary() ([]byte, error) {
+func (m MuSigTerminate) MarshallBinary() ([]byte, error) {
 	return proto.Marshal(&pb.MuSigTerminateMessage{
 		SessionID: m.SessionID.Bytes(),
 		Reason:    m.Reason,
@@ -293,17 +338,27 @@ type MuSigCommitment struct {
 	transport.AppInfo
 
 	// Unique SessionID of the MuSig session.
-	SessionID types.Hash `json:"session_id"`
+	SessionID types.Hash
 
-	CommitmentKeyX *big.Int `json:"commitment_key_x"`
-	CommitmentKeyY *big.Int `json:"commitment_key_y"`
+	CommitmentKeyX *big.Int
+	CommitmentKeyY *big.Int
 
-	PublicKeyX *big.Int `json:"public_key_x"`
-	PublicKeyY *big.Int `json:"public_key_y"`
+	PublicKeyX *big.Int
+	PublicKeyY *big.Int
+}
+
+func (m MuSigCommitment) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"session_id":       m.SessionID.String(),
+		"commitment_key_x": hexutil.BigIntToHex(m.CommitmentKeyX),
+		"commitment_key_y": hexutil.BigIntToHex(m.CommitmentKeyY),
+		"public_key_x":     hexutil.BigIntToHex(m.PublicKeyX),
+		"public_key_y":     hexutil.BigIntToHex(m.PublicKeyY),
+	})
 }
 
 // MarshallBinary implements the transport.Message interface.
-func (m *MuSigCommitment) MarshallBinary() ([]byte, error) {
+func (m MuSigCommitment) MarshallBinary() ([]byte, error) {
 	var (
 		pubKeyX []byte
 		pubKeyY []byte
@@ -357,14 +412,21 @@ type MuSigPartialSignature struct {
 	transport.AppInfo
 
 	// Unique SessionID of the MuSig session.
-	SessionID types.Hash `json:"session_id"`
+	SessionID types.Hash
 
 	// Partial signature of the MuSig session.
-	PartialSignature *big.Int `json:"partial_signature"`
+	PartialSignature *big.Int
+}
+
+func (m MuSigPartialSignature) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"session_id":        m.SessionID.String(),
+		"partial_signature": hexutil.BigIntToHex(m.PartialSignature),
+	})
 }
 
 // MarshallBinary implements the transport.Message interface.
-func (m *MuSigPartialSignature) MarshallBinary() ([]byte, error) {
+func (m MuSigPartialSignature) MarshallBinary() ([]byte, error) {
 	var partialSignature []byte
 	if m.PartialSignature != nil {
 		partialSignature = m.PartialSignature.Bytes()
@@ -411,6 +473,19 @@ type MuSigSignature struct {
 	// SchnorrSignature is a MuSig Schnorr signature calculated from the partial
 	// signatures of all participants.
 	SchnorrSignature *big.Int `json:"schnorrSignature"`
+}
+
+func (m MuSigSignature) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"session_id":        m.SessionID.String(),
+		"computed_at":       m.ComputedAt.In(time.UTC).Format(time.RFC3339),
+		"commitment":        m.Commitment.String(),
+		"schnorr_signature": hexutil.BigIntToHex(m.SchnorrSignature),
+		"msg_type":          m.MsgType,
+		"msg_body":          m.MsgBody.String(),
+		"msg_meta":          m.MsgMeta.Meta,
+		"signers":           m.Signers,
+	})
 }
 
 func (m *MuSigSignature) toProtobuf() (*pb.MuSigSignatureMessage, error) {
@@ -471,7 +546,7 @@ func (m *MuSigSignature) fromProtobuf(msg *pb.MuSigSignatureMessage) error {
 }
 
 // MarshallBinary implements the transport.Message interface.
-func (m *MuSigSignature) MarshallBinary() ([]byte, error) {
+func (m MuSigSignature) MarshallBinary() ([]byte, error) {
 	msg, err := m.toProtobuf()
 	if err != nil {
 		return nil, err

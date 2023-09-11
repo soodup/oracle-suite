@@ -89,12 +89,12 @@ func (a *AppInfo) GetAppInfo() AppInfo {
 type Meta struct {
 	Transport            string `json:"transport"`
 	Topic                string `json:"topic"`
-	MessageID            string `json:"messageID"`
-	PeerID               string `json:"peerID"`
-	PeerAddr             string `json:"peerAddr"`
-	ReceivedFromPeerID   string `json:"receivedFromPeerID"`
-	ReceivedFromPeerAddr string `json:"receivedFromPeerAddr"`
-	UserAgent            string `json:"userAgent"`
+	MessageID            string `json:"message_id"`
+	PeerID               string `json:"peer_id"`
+	PeerAddr             string `json:"peer_addr"`
+	ReceivedFromPeerID   string `json:"received_from_peer_id"`
+	ReceivedFromPeerAddr string `json:"received_from_peer_addr"`
+	UserAgent            string `json:"user_agent"`
 }
 
 func ReceivedMessageFields(p ReceivedMessage) log.Fields {

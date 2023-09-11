@@ -90,12 +90,16 @@ func (t Tick) Validate() error {
 
 func (t Tick) MarshalJSON() ([]byte, error) {
 	var volume24h string
+	var price string
+	if t.Price != nil {
+		price = t.Price.String()
+	}
 	if t.Volume24h != nil {
 		volume24h = t.Volume24h.String()
 	}
-	return json.Marshal(map[string]interface{}{
+	return json.Marshal(map[string]any{
 		"pair":      t.Pair.String(),
-		"price":     t.Price.String(),
+		"price":     price,
 		"volume24h": volume24h,
 	})
 }
