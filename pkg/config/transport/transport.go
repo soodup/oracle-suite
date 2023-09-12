@@ -334,6 +334,8 @@ func (c *Config) configureWebAPI(d Dependencies) (transport.Service, error) {
 		Signer:          key,
 		Client:          httpClient,
 		Logger:          d.Logger,
+		AppName:         d.AppName,
+		AppVersion:      d.AppVersion,
 	})
 	if err != nil {
 		return nil, &hcl.Diagnostic{
