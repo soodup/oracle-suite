@@ -10,7 +10,6 @@ jobs:
   dockers:
     uses: ./.github/workflows/docker.yml
     strategy:
-      max-parallel: 2
       matrix:
         application:
           - spire
