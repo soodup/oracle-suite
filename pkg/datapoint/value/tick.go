@@ -23,23 +23,19 @@ import (
 	"github.com/chronicleprotocol/oracle-suite/pkg/util/bn"
 )
 
-// TickPricePrecision specified number of decimal places for tick prices
-// during marshaling.
-const TickPricePrecision = 18
-
-// TickVolumePrecision specified number of decimal places for tick volumes
-// during marshaling.
-const TickVolumePrecision = 18
+func NewTick(pair Pair, price, volume any) Tick {
+	return Tick{
+		Pair:      pair,
+		Price:     bn.DecFloatPoint(price),
+		Volume24h: bn.DecFloatPoint(volume),
+	}
+}
 
 // Tick contains a price, volume and other information for a given asset pair
 // at a given time.
 //
 // Before using this data, you should check if it is valid by calling
 // Tick.Validate() method.
-//
-// During marshaling, the price and volume are converted to fixed-point
-// numbers with the precision specified by TickPricePrecision and
-// TickVolumePrecision constants.
 type Tick struct {
 	// Pair is an asset pair for which this price is calculated.
 	Pair Pair
@@ -49,23 +45,36 @@ type Tick struct {
 	// a last trade price, an average of bid and ask prices, etc.
 	//
 	// Price is always non-nil if there is no error.
-	Price *bn.FloatNumber
+	Price *bn.DecFloatPointNumber
 
 	// Volume24h is a 24h volume for the given asset pair presented in the
 	// base currency.
 	//
 	// May be nil if the provider does not provide volume.
-	Volume24h *bn.FloatNumber
+	Volume24h *bn.DecFloatPointNumber
 }
 
 // Number implements the NumericValue interface.
 func (t Tick) Number() *bn.FloatNumber {
-	return t.Price
+	if t.Price == nil {
+		return nil
+	}
+	return t.Price.Float()
 }
 
 // Print implements the Value interface.
 func (t Tick) Print() string {
-	return fmt.Sprintf("Pair=%s, Price=%s, Volume24h=%s", t.Pair, t.Price, t.Volume24h)
+	var (
+		price     = "<nil>"
+		volume24h = "<nil>"
+	)
+	if t.Price != nil {
+		price = t.Price.Text('g', 10)
+	}
+	if t.Volume24h != nil {
+		volume24h = t.Volume24h.Text('g', 10)
+	}
+	return fmt.Sprintf("Pair=%s, Price=%s, Volume24h=%s", t.Pair, price, volume24h)
 }
 
 // Validate returns an error if the tick is invalid.
@@ -78,9 +87,6 @@ func (t Tick) Validate() error {
 	}
 	if t.Price.Sign() <= 0 {
 		return fmt.Errorf("price is zero or negative")
-	}
-	if t.Price.IsInf() {
-		return fmt.Errorf("price is infinite")
 	}
 	if t.Volume24h != nil && t.Volume24h.Sign() < 0 {
 		return fmt.Errorf("volume is negative")
@@ -114,8 +120,8 @@ func (t *Tick) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	t.Pair = pair
-	t.Price = bn.Float(result["price"].(string))
-	t.Volume24h = bn.Float(result["volume24h"].(string))
+	t.Price = bn.DecFloatPoint(result["price"].(string))
+	t.Volume24h = bn.DecFloatPoint(result["volume24h"].(string))
 	return nil
 }
 

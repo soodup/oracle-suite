@@ -62,7 +62,7 @@ func (n *TickMedianNode) DataPoint() datapoint.Point {
 		tm     time.Time
 		points []datapoint.Point
 		ticks  []value.Tick
-		prices []*bn.FloatNumber
+		prices []*bn.DecFloatPointNumber
 	)
 
 	// Collect all data points from nodes and that can be used to calculate
@@ -110,11 +110,7 @@ func (n *TickMedianNode) DataPoint() datapoint.Point {
 
 	// Return median tick.
 	return datapoint.Point{
-		Value: value.Tick{
-			Pair:      ticks[0].Pair,
-			Price:     median(prices),
-			Volume24h: bn.Float(0),
-		},
+		Value:     value.NewTick(ticks[0].Pair, median(prices), 0),
 		Time:      tm,
 		SubPoints: points,
 		Meta:      n.Meta(),
@@ -129,7 +125,7 @@ func (n *TickMedianNode) Meta() map[string]any {
 	}
 }
 
-func median(xs []*bn.FloatNumber) *bn.FloatNumber {
+func median(xs []*bn.DecFloatPointNumber) *bn.DecFloatPointNumber {
 	count := len(xs)
 	if count == 0 {
 		return nil
@@ -141,7 +137,7 @@ func median(xs []*bn.FloatNumber) *bn.FloatNumber {
 		m := count / 2
 		x1 := xs[m-1]
 		x2 := xs[m]
-		return x1.Add(x2).Div(bn.Float(2))
+		return x1.Add(x2).Div(bn.DecFloatPoint(2))
 	}
 	return xs[(count-1)/2]
 }
