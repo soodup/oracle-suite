@@ -22,6 +22,7 @@ import (
 
 	"github.com/defiweb/go-eth/hexutil"
 	"github.com/defiweb/go-eth/rpc"
+	"github.com/defiweb/go-eth/rpc/transport"
 	"github.com/defiweb/go-eth/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -55,6 +56,9 @@ func (m *mockRPC) SendTransaction(ctx context.Context, tx types.Transaction) (*t
 
 func TestSimulateTransaction(t *testing.T) {
 	ctx := context.Background()
+	contract, _ := abi.ParseSignatures(
+		`error StaleMessage(uint32 givenAge, uint32 currentAge)`,
+	)
 
 	// Mocked transaction for the test
 	tx := types.Transaction{
@@ -77,6 +81,12 @@ func TestSimulateTransaction(t *testing.T) {
 			"4e487b71" +
 			"7265766572740000000000000000000000000000000000000000000000000000",
 	)
+	customErrorData := hexutil.MustHexToBytes(
+		"0x" +
+			"76f4b878" +
+			"0000000000000000000000000000000000000000000000000000000064e7d147" +
+			"000000000000000000000000000000000000000000000000000000006503235c",
+	)
 
 	t.Run("successful transaction", func(t *testing.T) {
 		mockClient := new(mockRPC)
@@ -91,7 +101,7 @@ func TestSimulateTransaction(t *testing.T) {
 			nil,
 		)
 
-		err := simulateTransaction(ctx, mockClient, tx)
+		err := simulateTransaction(ctx, mockClient, contract, tx)
 		require.NoError(t, err)
 	})
 
@@ -103,14 +113,18 @@ func TestSimulateTransaction(t *testing.T) {
 			tx.Call,
 			types.LatestBlockNumber,
 		).Return(
-			revertData,
+			[]byte{},
 			&types.Call{},
-			nil,
+			&transport.RPCError{
+				Code:    3,
+				Message: "",
+				Data:    revertData,
+			},
 		)
 
-		err := simulateTransaction(ctx, mockClient, tx)
+		err := simulateTransaction(ctx, mockClient, contract, tx)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "transaction reverted")
+		assert.Contains(t, err.Error(), "revert")
 	})
 
 	t.Run("panicked transaction", func(t *testing.T) {
@@ -121,14 +135,40 @@ func TestSimulateTransaction(t *testing.T) {
 			tx.Call,
 			types.LatestBlockNumber,
 		).Return(
-			panicData,
+			[]byte{},
 			&types.Call{},
-			nil,
+			&transport.RPCError{
+				Code:    3,
+				Message: "",
+				Data:    panicData,
+			},
 		)
 
-		err := simulateTransaction(ctx, mockClient, tx)
+		err := simulateTransaction(ctx, mockClient, contract, tx)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "transaction panicked")
+		assert.Contains(t, err.Error(), "panic")
+	})
+
+	t.Run("custom error", func(t *testing.T) {
+		mockClient := new(mockRPC)
+		mockClient.On(
+			"Call",
+			ctx,
+			tx.Call,
+			types.LatestBlockNumber,
+		).Return(
+			[]byte{},
+			&types.Call{},
+			&transport.RPCError{
+				Code:    3,
+				Message: "",
+				Data:    customErrorData,
+			},
+		)
+
+		err := simulateTransaction(ctx, mockClient, contract, tx)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "StaleMessage")
 	})
 }
 

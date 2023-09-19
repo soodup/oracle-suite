@@ -18,25 +18,30 @@ package contract
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 
 	goethABI "github.com/defiweb/go-eth/abi"
 	"github.com/defiweb/go-eth/rpc"
+	"github.com/defiweb/go-eth/rpc/transport"
 	"github.com/defiweb/go-eth/types"
 )
 
 // simulateTransaction simulates a transaction by calling the contract method
 // and checking for revert or panic.
-func simulateTransaction(ctx context.Context, rpc rpc.RPC, tx types.Transaction) error {
-	res, _, err := rpc.Call(ctx, tx.Call, types.LatestBlockNumber)
+func simulateTransaction(ctx context.Context, rpc rpc.RPC, c *goethABI.Contract, tx types.Transaction) error {
+	_, _, err := rpc.Call(ctx, tx.Call, types.LatestBlockNumber)
 	if err != nil {
+		var rpcErr *transport.RPCError
+		if errors.As(err, &rpcErr) {
+			data, ok := rpcErr.Data.([]byte)
+			if !ok {
+				return err
+			}
+			if err := c.ToError(data); err != nil {
+				return err
+			}
+		}
 		return err
-	}
-	if goethABI.IsRevert(res) {
-		return fmt.Errorf("transaction reverted: %v", goethABI.DecodeRevert(res))
-	}
-	if goethABI.IsPanic(res) {
-		return fmt.Errorf("transaction panicked: %v", goethABI.DecodePanic(res))
 	}
 	return nil
 }
