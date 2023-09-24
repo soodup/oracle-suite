@@ -40,6 +40,10 @@ upgrade() {
 	systemctl restart ghost spire
 }
 
+setupUser() {
+		adduser --quiet --system --group nogroup --no-create-home --disabled-login --disabled-password --home /opt/chronicle chronicle
+}
+
 # Step 2, check if this is a clean install or an upgrade
 action="$1"
 if  [ "$1" = "configure" ] && [ -z "$2" ]; then
@@ -51,6 +55,7 @@ fi
 case "$action" in
 	"1" | "install")
 		printf "\033[32m Post Install of an clean install\033[0m\n"
+		setupUser
 		cleanInstall
 		;;
 	"2" | "upgrade")

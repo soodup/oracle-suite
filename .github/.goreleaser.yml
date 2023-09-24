@@ -12,6 +12,9 @@ builds:
     goos:
       - linux
       - darwin
+    goarch:
+      - amd64
+      - arm64
     ldflags:
       - "-X github.com/chronicleprotocol/oracle-suite.Version={{.Version}}"
 
@@ -21,6 +24,9 @@ builds:
     goos:
       - linux
       - darwin
+    goarch:
+      - amd64
+      - arm64
     ldflags:
       - "-X github.com/chronicleprotocol/oracle-suite.Version={{.Version}}"
 
@@ -30,6 +36,9 @@ builds:
     goos:
       - linux
       - darwin
+    goarch:
+      - amd64
+      - arm64
     ldflags:
       - "-X github.com/chronicleprotocol/oracle-suite.Version={{.Version}}"
 

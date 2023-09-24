@@ -16,7 +16,7 @@
 set -xeuo pipefail
 
 APP_USER="chronicle"
-APP_GROUP="chronicle"
+APP_GROUP="nogroup"
 
 APP_WD="/opt/chronicle"
 APP_CONFIG="${APP_WD}/config.hcl"
