@@ -7,7 +7,6 @@ on:
         description: 'Application Snapshot'
         type: boolean
         default: false
-        required: true
   workflow_dispatch:
     inputs:
       snapshot:
