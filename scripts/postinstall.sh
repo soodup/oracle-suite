@@ -13,7 +13,7 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-set -xeuo pipefail
+set -euo pipefail
 
 cleanInstall() {
 	printf "\033[32m Reload the service unit from disk\033[0m\n"
@@ -41,7 +41,7 @@ upgrade() {
 }
 
 setupUser() {
-		adduser --quiet --system --group nogroup --no-create-home --disabled-login --disabled-password --home /opt/chronicle chronicle
+		adduser --quiet --system --home /opt/chronicle --no-create-home --disabled-login --disabled-password chronicle
 }
 
 # Step 2, check if this is a clean install or an upgrade
