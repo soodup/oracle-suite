@@ -17,12 +17,14 @@ package contract
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/big"
 	"sort"
 	"time"
 
+	"github.com/defiweb/go-eth/crypto"
 	"github.com/defiweb/go-eth/rpc"
 	"github.com/defiweb/go-eth/types"
 
@@ -158,4 +160,37 @@ func (m *Median) Poke(ctx context.Context, vals []MedianVal) (*types.Hash, *type
 		return nil, nil, fmt.Errorf("median: poke failed: %v", err)
 	}
 	return txHash, txCpy, nil
+}
+
+// ConstructMedianPokeMessage returns the message expected to be signed via ECDSA for calling
+// Median.poke method.
+//
+// The message structure is defined as:
+// H(tag ‖ H(val ‖ age ‖ wat)
+//
+// Where:
+// - tag:
+// - val: a price value
+// - age: a time when the price was observed
+// - wat: an asset name
+func ConstructMedianPokeMessage(wat string, val *bn.DecFloatPointNumber, age time.Time) types.Hash {
+	// Price (val):
+	uint256Val := make([]byte, 32)
+	val.DecFixedPoint(MedianPricePrecision).RawBigInt().FillBytes(uint256Val)
+
+	// Time (age):
+	uint256Age := make([]byte, 32)
+	binary.BigEndian.PutUint64(uint256Age[24:], uint64(age.Unix()))
+
+	// Asset name (wat):
+	bytes32Wat := make([]byte, 32)
+	copy(bytes32Wat, wat)
+
+	// Hash:
+	data := make([]byte, 96)
+	copy(data[0:32], uint256Val)
+	copy(data[32:64], uint256Age)
+	copy(data[64:96], bytes32Wat)
+
+	return crypto.Keccak256(crypto.AddMessagePrefix(crypto.Keccak256(data).Bytes()))
 }
