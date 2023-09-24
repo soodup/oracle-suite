@@ -24,7 +24,7 @@ APP_LOG_FORMAT="text"
 APP_LOG_VERBOSITY="info"
 
 for APP_NAME in ghost spire; do
-	APP_PATH="$(command -v ${APP_NAME})"
+	APP_PATH="/usr/bin/${APP_NAME}"
 
 	tee <<-EOF /etc/systemd/system/${APP_NAME}.service >&2
 		[Unit]
