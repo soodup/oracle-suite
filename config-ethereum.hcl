@@ -6,6 +6,7 @@ variables {
   eth_rpc_urls = explode(var.item_separator, env("CFG_ETH_RPC_URLS", env("ETH_RPC_URL", "https://eth.public-rpc.com")))
   arb_rpc_urls = explode(var.item_separator, env("CFG_ARB_RPC_URLS", ""))
   opt_rpc_urls = explode(var.item_separator, env("CFG_OPT_RPC_URLS", ""))
+  gno_rpc_urls = explode(var.item_separator, env("CFG_GNO_RPC_URLS", ""))
 }
 
 ethereum {
@@ -66,6 +67,15 @@ ethereum {
     content {
       rpc_urls     = var.opt_rpc_urls
       chain_id     = tonumber(env("CFG_OPT_CHAIN_ID", "10"))
+      ethereum_key = "default"
+    }
+  }
+  dynamic "client" {
+    for_each = length(var.gno_rpc_urls) == 0 ? [] : [1]
+    labels   = ["gnosis"]
+    content {
+      rpc_urls     = var.gno_rpc_urls
+      chain_id     = tonumber(env("CFG_GNO_CHAIN_ID", "100"))
       ethereum_key = "default"
     }
   }

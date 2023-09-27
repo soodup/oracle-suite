@@ -14,6 +14,15 @@ gofer {
     }
   }
 
+  origin "balancerV2Gnosis" {
+    type = "balancerV2"
+    contracts "gnosis" {
+      addresses = {
+        "USDT/USDC/WXDAI" = "0x2086f52651837600180dE173B09470F54EF74910" # ComposableStablePool
+      }
+    }
+  }
+
   origin "binance" {
     type = "tick_generic_jq"
     url  = "https://api.binance.com/api/v3/ticker/24hr"
@@ -54,6 +63,16 @@ gofer {
         "USDT/WBTC/WETH" = "0xD51a44d3FaE010294C616388b506AcdA1bfAAE46",
         "WETH/YFI"       = "0xC26b89A667578ec7b3f11b2F98d6Fd15C07C54ba",
         "WETH/RETH"      = "0x0f3159811670c117c372428D4E69AC32325e4D0F"
+      }
+    }
+  }
+
+  origin "curveGnosis" {
+    type = "curve"
+    contracts "gnosis" {
+      addresses = {
+        # int256, stableswap
+        "WXDAI/USDC/USDT" = "0x7f90122BF0700F9E7e1F688fe926940E8839F353",
       }
     }
   }
@@ -135,6 +154,15 @@ gofer {
         "DAI/WETH"  = "0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f",
         "WBTC/WETH" = "0xCEfF51756c56CeFFCA006cD410B03FFC46dd3a58",
         "LINK/WETH" = "0xC40D16476380e4037e6b1A2594cAF6a6cc8Da967"
+      }
+    }
+  }
+
+  origin "sushiswapGnosis" {
+    type = "sushiswap"
+    contracts "gnosis" {
+      addresses = {
+        "USDC/WXDAI" = "0xA227c72a4055A9DC949cAE24f54535fe890d3663"
       }
     }
   }
@@ -778,6 +806,24 @@ gofer {
     indirect {
       reference { data_model = "WSTETH/ETH" }
       reference { data_model = "ETH/USD" }
+    }
+  }
+
+  data_model "WXDAI/USD" {
+    median {
+      min_values = 3
+      indirect {
+        origin "balancerV2Gnosis" { query = "USDT/WXDAI" }
+        reference { data_model = "USDT/USD" }
+      }
+      indirect {
+        origin "curveGnosis" { query = "WXDAI/USDT" }
+        reference { data_model = "USDT/USD" }
+      }
+      indirect {
+        origin "sushiswapGnosis" { query = "USDC/WXDAI" }
+        reference { data_model = "USDC/USD" }
+      }
     }
   }
 

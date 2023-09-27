@@ -1221,6 +1221,7 @@ models = [
   "WBTC/USD",
   "WSTETH/ETH",
   "WSTETH/USD",
+  "WXDAI/USD",
   "XTZ/USD",
   "YFI/USD"
 ]

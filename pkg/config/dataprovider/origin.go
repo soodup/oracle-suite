@@ -72,7 +72,7 @@ type configCurveContracts struct {
 	// `addresses` are the pool addresses that are using `int256` (stableswap)
 	StableSwapContractAddresses origin.ContractAddresses `hcl:"addresses"`
 	// `addresses2` are the pool address that are using `uint256` (cryptoswap)
-	CryptoSwapContractAddresses origin.ContractAddresses `hcl:"addresses2"`
+	CryptoSwapContractAddresses origin.ContractAddresses `hcl:"addresses2,optional"`
 }
 
 type configOriginCurve struct {
