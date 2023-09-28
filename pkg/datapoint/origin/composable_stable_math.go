@@ -14,12 +14,12 @@ const AmpPrecision = 1e3
 
 var ampPrecision = big.NewInt(AmpPrecision)
 
-func mulDownFixed(a *big.Int, b *big.Int) *big.Int {
+func MulDownFixed(a *big.Int, b *big.Int) *big.Int {
 	var ret = new(big.Int).Mul(a, b)
 	return new(big.Int).Div(ret, bigIntEther)
 }
 
-func mulUpFixed(a *big.Int, b *big.Int) *big.Int {
+func MulUpFixed(a *big.Int, b *big.Int) *big.Int {
 	var ret = new(big.Int).Mul(a, b)
 	if ret.Cmp(bigIntZero) == 0 {
 		return ret
@@ -27,25 +27,25 @@ func mulUpFixed(a *big.Int, b *big.Int) *big.Int {
 	return new(big.Int).Add(new(big.Int).Div(new(big.Int).Sub(ret, bigIntOne), bigIntEther), bigIntOne)
 }
 
-func div(a *big.Int, b *big.Int, roundUp bool) *big.Int {
+func DivRounding(a *big.Int, b *big.Int, roundUp bool) *big.Int {
 	if roundUp {
-		return divUp(a, b)
+		return DivUp(a, b)
 	}
-	return divDown(a, b)
+	return DivDown(a, b)
 }
 
-func divDown(a *big.Int, b *big.Int) *big.Int {
+func DivDown(a *big.Int, b *big.Int) *big.Int {
 	return new(big.Int).Div(a, b)
 }
 
-func divUp(a *big.Int, b *big.Int) *big.Int {
+func DivUp(a *big.Int, b *big.Int) *big.Int {
 	if a.Cmp(bigIntZero) == 0 {
 		return bigIntZero
 	}
 	return new(big.Int).Add(new(big.Int).Div(new(big.Int).Sub(a, bigIntOne), b), bigIntOne)
 }
 
-func divUpFixed(a *big.Int, b *big.Int) *big.Int {
+func DivUpFixed(a *big.Int, b *big.Int) *big.Int {
 	if a.Cmp(bigIntZero) == 0 {
 		return bigIntZero
 	}
@@ -53,7 +53,7 @@ func divUpFixed(a *big.Int, b *big.Int) *big.Int {
 	return new(big.Int).Add(new(big.Int).Div(new(big.Int).Sub(aInflated, bigIntOne), b), bigIntOne)
 }
 
-func divDownFixed(a *big.Int, b *big.Int) *big.Int {
+func DivDownFixed(a *big.Int, b *big.Int) *big.Int {
 	if a.Cmp(bigIntZero) == 0 {
 		return bigIntZero
 	}
@@ -61,7 +61,7 @@ func divDownFixed(a *big.Int, b *big.Int) *big.Int {
 	return new(big.Int).Div(ret, b)
 }
 
-func complementFixed(x *big.Int) *big.Int {
+func ComplementFixed(x *big.Int) *big.Int {
 	if x.Cmp(bigIntEther) < 0 {
 		return new(big.Int).Sub(bigIntEther, x)
 	}
@@ -69,7 +69,7 @@ func complementFixed(x *big.Int) *big.Int {
 }
 
 // https://github.com/balancer/balancer-v2-monorepo/blob/master/pkg/pool-stable/contracts/StableMath.sol#L57
-func calculateInvariant(amp *big.Int, balances []*big.Int, roundUp bool) (*big.Int, error) { //nolint:unparam
+func CalculateInvariant(amp *big.Int, balances []*big.Int, roundUp bool) (*big.Int, error) {
 	var sum = bigIntZero
 	var numTokens = len(balances)
 	var numTokensBi = big.NewInt(int64(numTokens))
@@ -85,17 +85,17 @@ func calculateInvariant(amp *big.Int, balances []*big.Int, roundUp bool) (*big.I
 	for i := 0; i < 255; i++ {
 		var PD = new(big.Int).Mul(balances[0], numTokensBi) // P_D
 		for j := 1; j < numTokens; j++ {
-			PD = div(new(big.Int).Mul(new(big.Int).Mul(PD, balances[j]), numTokensBi), invariant, roundUp)
+			PD = DivRounding(new(big.Int).Mul(new(big.Int).Mul(PD, balances[j]), numTokensBi), invariant, roundUp)
 		}
 		prevInvariant = invariant
-		invariant = div(
+		invariant = DivRounding(
 			new(big.Int).Add(
 				new(big.Int).Mul(new(big.Int).Mul(numTokensBi, invariant), invariant),
-				div(new(big.Int).Mul(new(big.Int).Mul(ampTotal, sum), PD), ampPrecision, roundUp),
+				DivRounding(new(big.Int).Mul(new(big.Int).Mul(ampTotal, sum), PD), ampPrecision, roundUp),
 			),
 			new(big.Int).Add(
 				new(big.Int).Mul(new(big.Int).Add(numTokensBi, bigIntOne), invariant),
-				div(new(big.Int).Mul(new(big.Int).Sub(ampTotal, ampPrecision), PD), ampPrecision, !roundUp),
+				DivRounding(new(big.Int).Mul(new(big.Int).Sub(ampTotal, ampPrecision), PD), ampPrecision, !roundUp),
 			),
 			roundUp,
 		)
@@ -124,21 +124,21 @@ func getTokenBalanceGivenInvariantAndAllOtherBalances(
 	var sum = balances[0]
 	var PD = new(big.Int).Mul(balances[0], nTokensBi) // P_D
 	for j := 1; j < nTokens; j++ {
-		PD = divDown(new(big.Int).Mul(new(big.Int).Mul(PD, balances[j]), nTokensBi), invariant)
+		PD = DivDown(new(big.Int).Mul(new(big.Int).Mul(PD, balances[j]), nTokensBi), invariant)
 		sum = new(big.Int).Add(sum, balances[j])
 	}
 	sum = new(big.Int).Sub(sum, balances[tokenIndex])
 	var inv2 = new(big.Int).Mul(invariant, invariant)
 	var c = new(big.Int).Mul(
-		new(big.Int).Mul(divUp(inv2, new(big.Int).Mul(ampTotal, PD)), ampPrecision),
+		new(big.Int).Mul(DivUp(inv2, new(big.Int).Mul(ampTotal, PD)), ampPrecision),
 		balances[tokenIndex],
 	)
-	var b = new(big.Int).Add(sum, new(big.Int).Mul(divDown(invariant, ampTotal), ampPrecision))
+	var b = new(big.Int).Add(sum, new(big.Int).Mul(DivDown(invariant, ampTotal), ampPrecision))
 	var prevTokenBalance *big.Int
-	var tokenBalance = divUp(new(big.Int).Add(inv2, c), new(big.Int).Add(invariant, b))
+	var tokenBalance = DivUp(new(big.Int).Add(inv2, c), new(big.Int).Add(invariant, b))
 	for i := 0; i < 255; i++ {
 		prevTokenBalance = tokenBalance
-		tokenBalance = divUp(
+		tokenBalance = DivUp(
 			new(big.Int).Add(new(big.Int).Mul(tokenBalance, tokenBalance), c),
 			new(big.Int).Sub(new(big.Int).Add(new(big.Int).Mul(tokenBalance, bigIntTwo), b), invariant),
 		)
@@ -154,7 +154,7 @@ func getTokenBalanceGivenInvariantAndAllOtherBalances(
 }
 
 // https://github.com/balancer/balancer-v2-monorepo/blob/master/pkg/pool-stable/contracts/StableMath.sol#L124
-func calcOutGivenIn(
+func CalcOutGivenIn(
 	a *big.Int,
 	balances []*big.Int,
 	tokenIndexIn int,

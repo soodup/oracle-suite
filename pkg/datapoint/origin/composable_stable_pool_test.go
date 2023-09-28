@@ -172,6 +172,6 @@ func TestCalculateInvariant(t *testing.T) {
 	balances := []*big.Int{
 		b1, b2, b3,
 	}
-	_, err := calculateInvariant(a, balances, false)
+	_, err := CalculateInvariant(a, balances, false)
 	assert.Equal(t, err, fmt.Errorf("STABLE_INVARIANT_DIDNT_CONVERGE"))
 }

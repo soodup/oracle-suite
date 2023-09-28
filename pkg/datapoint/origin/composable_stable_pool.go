@@ -394,13 +394,13 @@ func (c *ComposableStablePool) onRegularSwap(
 	// (uint256 currentAmp, ) = _getAmplificationParameter();
 	// uint256 invariant = StableMath._calculateInvariant(currentAmp, balances);
 	currentAmp := c.config.Extra.AmplificationParameter.Value
-	invariant, err := calculateInvariant(currentAmp, droppedBalances, false)
+	invariant, err := CalculateInvariant(currentAmp, droppedBalances, false)
 	if err != nil {
 		return nil, err
 	}
 
 	// StableMath._calcOutGivenIn(currentAmp, balances, indexIn, indexOut, amountGiven, invariant);
-	return calcOutGivenIn(currentAmp, droppedBalances, indexIn, indexOut, amountIn, invariant)
+	return CalcOutGivenIn(currentAmp, droppedBalances, indexIn, indexOut, amountIn, invariant)
 }
 
 // onSwapGivenIn implements same functionality with the following url:
@@ -487,7 +487,7 @@ func (c *ComposableStablePool) swapWithBptGivenIn(indexIn, indexOut int, amountI
 		return nil, nil, fmt.Errorf("INVALID_AMOUNT_OUT_CALCULATED")
 	}
 	// _downscaleDown(amountCalculated, scalingFactors[registeredIndexOut]) // Amount out, round down
-	return divDownFixed(amountCalculated, c.config.Extra.ScalingFactors[indexOut]), feeAmount, nil
+	return DivDownFixed(amountCalculated, c.config.Extra.ScalingFactors[indexOut]), feeAmount, nil
 }
 
 // exitSwapExactBptInForTokenOut implements same functionality with the following url:
@@ -594,7 +594,7 @@ func (c *ComposableStablePool) beforeJoinExit(registeredBalances []*big.Int) (*b
 	if currentAmp.Cmp(c.config.Extra.LastJoinExit.LastJoinExitAmplification) == 0 {
 		preJoinExitInvariant = oldAmpPreJoinExitInvariant
 	} else {
-		preJoinExitInvariant, err = calculateInvariant(currentAmp, balances, false)
+		preJoinExitInvariant, err = CalculateInvariant(currentAmp, balances, false)
 	}
 	if err != nil {
 		return nil, nil, nil, nil, err
@@ -639,12 +639,12 @@ func (c *ComposableStablePool) getProtocolPoolOwnershipPercentage(balances []*bi
 	}
 
 	// swapFeeGrowthInvariantDelta/totalGrowthInvariant*getProtocolFeePercentageCache
-	protocolSwapFeePercentage := mulDownFixed(
-		divDownFixed(swapFeeGrowthInvariantDelta, totalGrowthInvariant),
+	protocolSwapFeePercentage := MulDownFixed(
+		DivDownFixed(swapFeeGrowthInvariantDelta, totalGrowthInvariant),
 		c.config.Extra.ProtocolFeePercentageCacheSwapType)
 
-	protocolYieldPercentage := mulDownFixed(
-		divDownFixed(nonExemptYieldGrowthInvariantDelta, totalGrowthInvariant),
+	protocolYieldPercentage := MulDownFixed(
+		DivDownFixed(nonExemptYieldGrowthInvariantDelta, totalGrowthInvariant),
 		c.config.Extra.ProtocolFeePercentageCacheYieldType)
 
 	// Calculate the total protocol ComposableStablePool ownership percentage
@@ -665,7 +665,7 @@ func (c *ComposableStablePool) getGrowthInvariants(balances []*big.Int) (*big.In
 
 	// This invariant result is calc by DivDown (round down)
 	// https://github.com/balancer/balancer-v2-monorepo/blob/b46023f7c5deefaf58a0a42559a36df420e1639f/pkg/pool-stable/contracts/StableMath.sol#L96
-	swapFeeGrowthInvariant, err = calculateInvariant(
+	swapFeeGrowthInvariant, err = CalculateInvariant(
 		c.config.Extra.LastJoinExit.LastJoinExitAmplification,
 		c.getAdjustedBalances(balances, true), false)
 	if err != nil {
@@ -679,7 +679,7 @@ func (c *ComposableStablePool) getGrowthInvariants(balances []*big.Int) (*big.In
 		// If there are no tokens with fee-exempt yield, then the total non-exempt growth will equal the total
 		// growth: all yield growth is non-exempt. There's also no point in adjusting balances, since we
 		// already know none are exempt.
-		totalNonExemptGrowthInvariant, err = calculateInvariant(c.config.Extra.LastJoinExit.LastJoinExitAmplification, balances, false)
+		totalNonExemptGrowthInvariant, err = CalculateInvariant(c.config.Extra.LastJoinExit.LastJoinExitAmplification, balances, false)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -689,7 +689,7 @@ func (c *ComposableStablePool) getGrowthInvariants(balances []*big.Int) (*big.In
 		// If no tokens are charged fees on yield, then the non-exempt growth is equal to the swap fee growth - no
 		// yield fees will be collected.
 		totalNonExemptGrowthInvariant = swapFeeGrowthInvariant
-		totalGrowthInvariant, err = calculateInvariant(c.config.Extra.LastJoinExit.LastJoinExitAmplification, balances, false)
+		totalGrowthInvariant, err = CalculateInvariant(c.config.Extra.LastJoinExit.LastJoinExitAmplification, balances, false)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -697,7 +697,7 @@ func (c *ComposableStablePool) getGrowthInvariants(balances []*big.Int) (*big.In
 		// In the general case, we need to calculate two invariants: one with some adjusted balances, and one with
 		// the current balances.
 
-		totalNonExemptGrowthInvariant, err = calculateInvariant(
+		totalNonExemptGrowthInvariant, err = CalculateInvariant(
 			c.config.Extra.LastJoinExit.LastJoinExitAmplification,
 			c.getAdjustedBalances(balances, false), // Only adjust non-exempt balances
 			false,
@@ -706,7 +706,7 @@ func (c *ComposableStablePool) getGrowthInvariants(balances []*big.Int) (*big.In
 			return nil, nil, nil, err
 		}
 
-		totalGrowthInvariant, err = calculateInvariant(
+		totalGrowthInvariant, err = CalculateInvariant(
 			c.config.Extra.LastJoinExit.LastJoinExitAmplification,
 			balances,
 			false)
@@ -788,7 +788,7 @@ func (c *ComposableStablePool) getAdjustedBalances(balances []*big.Int, ignoreEx
 // adjustedBalance implements same functionality with the following url:
 // https://github.com/balancer/balancer-v2-monorepo/blob/master/pkg/pool-stable/contracts/ComposableStablePoolRates.sol#L242
 func (c *ComposableStablePool) adjustedBalance(balance *big.Int, cache *TokenRateCache) *big.Int {
-	return divDown(new(big.Int).Mul(balance, cache.OldRate), cache.Rate)
+	return DivDown(new(big.Int).Mul(balance, cache.OldRate), cache.Rate)
 }
 
 // dropBptItem implements same functionality with the following url:
@@ -812,7 +812,7 @@ func (c *ComposableStablePool) bptForPoolOwnershipPercentage(totalSupply, poolOw
 	// `poolOwnershipPercentage = bptAmount / (totalSupply + bptAmount)`.
 	// Solving for `bptAmount`, we arrive at:
 	// `bptAmount = totalSupply * poolOwnershipPercentage / (1 - poolOwnershipPercentage)`.
-	return divDown(new(big.Int).Mul(totalSupply, poolOwnershipPercentage), complementFixed(poolOwnershipPercentage))
+	return DivDown(new(big.Int).Mul(totalSupply, poolOwnershipPercentage), ComplementFixed(poolOwnershipPercentage))
 }
 
 // skipBptIndex implements same functionality with the following url:
@@ -842,24 +842,24 @@ func (c *ComposableStablePool) swapGivenIn(indexIn, indexOut int, amountIn *big.
 		return nil, nil, err
 	}
 
-	return divDownFixed(amountOut, c.config.Extra.ScalingFactors[indexOut]), feeAmount, nil
+	return DivDownFixed(amountOut, c.config.Extra.ScalingFactors[indexOut]), feeAmount, nil
 }
 
 func (c *ComposableStablePool) subtractSwapFeeAmount(amount, swapFeePercentage *big.Int) (*big.Int, *big.Int) {
-	feeAmount := mulUpFixed(amount, swapFeePercentage)
+	feeAmount := MulUpFixed(amount, swapFeePercentage)
 	return new(big.Int).Sub(amount, feeAmount), feeAmount
 }
 
 func (c *ComposableStablePool) upscaleArray(amounts, scalingFactors []*big.Int) []*big.Int {
 	result := make([]*big.Int, len(amounts))
 	for i, amount := range amounts {
-		result[i] = mulUpFixed(amount, scalingFactors[i])
+		result[i] = MulUpFixed(amount, scalingFactors[i])
 	}
 	return result
 }
 
 func (c *ComposableStablePool) upscale(amount, scalingFactor *big.Int) *big.Int {
-	return mulUpFixed(amount, scalingFactor)
+	return MulUpFixed(amount, scalingFactor)
 }
 
 // calcBptOutGivenExactTokensIn implements same functionality with the following url:
@@ -880,20 +880,20 @@ func calcBptOutGivenExactTokensIn(
 	balanceRatiosWithFee := make([]*big.Int, len(amountsIn))
 	invariantRatioWithFees := big.NewInt(0)
 	for i, balance := range balances {
-		currentWeight := divDownFixed(balance, sumBalances)
-		balanceRatiosWithFee[i] = divDownFixed(new(big.Int).Add(balance, amountsIn[i]), balance)
-		invariantRatioWithFees.Add(invariantRatioWithFees, mulDownFixed(balanceRatiosWithFee[i], currentWeight))
+		currentWeight := DivDownFixed(balance, sumBalances)
+		balanceRatiosWithFee[i] = DivDownFixed(new(big.Int).Add(balance, amountsIn[i]), balance)
+		invariantRatioWithFees.Add(invariantRatioWithFees, MulDownFixed(balanceRatiosWithFee[i], currentWeight))
 	}
 
 	newBalances := make([]*big.Int, len(balances))
 	for i, balance := range balances {
 		var amountInWithoutFee *big.Int
 		if balanceRatiosWithFee[i].Cmp(invariantRatioWithFees) > 0 {
-			nonTaxableAmount := mulDownFixed(balance, new(big.Int).Sub(invariantRatioWithFees, big.NewInt(ether)))
+			nonTaxableAmount := MulDownFixed(balance, new(big.Int).Sub(invariantRatioWithFees, big.NewInt(ether)))
 			taxableAmount := new(big.Int).Sub(amountsIn[i], nonTaxableAmount)
 			amountInWithoutFee = new(big.Int).Add(
 				nonTaxableAmount,
-				mulDownFixed(
+				MulDownFixed(
 					taxableAmount,
 					new(big.Int).Sub(big.NewInt(ether), swapFeePercentage),
 				),
@@ -905,14 +905,14 @@ func calcBptOutGivenExactTokensIn(
 		newBalances[i] = new(big.Int).Add(balance, amountInWithoutFee)
 	}
 
-	newInvariant, err := calculateInvariant(amp, newBalances, false)
+	newInvariant, err := CalculateInvariant(amp, newBalances, false)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	invariantRatio := divDownFixed(newInvariant, invariant)
+	invariantRatio := DivDownFixed(newInvariant, invariant)
 	if invariantRatio.Cmp(big.NewInt(ether)) > 0 {
-		return mulDownFixed(bptTotalSupply, new(big.Int).Sub(invariantRatio, big.NewInt(ether))), feeAmountIn, nil
+		return MulDownFixed(bptTotalSupply, new(big.Int).Sub(invariantRatio, big.NewInt(ether))), feeAmountIn, nil
 	}
 	return big.NewInt(0), feeAmountIn, nil
 }
@@ -927,7 +927,7 @@ func calcTokenOutGivenExactBptIn(
 	bptTotalSupply, invariant, swapFeePercentage *big.Int,
 ) (*big.Int, *big.Int, error) {
 
-	newInvariant := mulUpFixed(divUpFixed(new(big.Int).Sub(bptTotalSupply, bptAmountIn), bptTotalSupply), invariant)
+	newInvariant := MulUpFixed(DivUpFixed(new(big.Int).Sub(bptTotalSupply, bptAmountIn), bptTotalSupply), invariant)
 	newBalanceTokenIndex, err := getTokenBalanceGivenInvariantAndAllOtherBalances(amp, balances, newInvariant, tokenIndex)
 	if err != nil {
 		return nil, nil, err
@@ -939,13 +939,13 @@ func calcTokenOutGivenExactBptIn(
 		sumBalances.Add(sumBalances, balance)
 	}
 
-	currentWeight := divDownFixed(balances[tokenIndex], sumBalances)
-	taxablePercentage := complementFixed(currentWeight)
+	currentWeight := DivDownFixed(balances[tokenIndex], sumBalances)
+	taxablePercentage := ComplementFixed(currentWeight)
 
-	taxableAmount := mulUpFixed(amountOutWithoutFee, taxablePercentage)
+	taxableAmount := MulUpFixed(amountOutWithoutFee, taxablePercentage)
 	nonTaxableAmount := new(big.Int).Sub(amountOutWithoutFee, taxableAmount)
 
-	feeOfTaxableAmount := mulDownFixed(
+	feeOfTaxableAmount := MulDownFixed(
 		taxableAmount,
 		new(big.Int).Sub(big.NewInt(ether), swapFeePercentage),
 	)
