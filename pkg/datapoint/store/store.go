@@ -165,6 +165,7 @@ func (p *Store) collectDataPoint(point *messages.DataPoint) {
 					WithField("from", from).
 					WithFields(datapoint.PointLogFields(point.Point)).
 					Error("Unable to recover address")
+				return
 			}
 			sdp := StoredDataPoint{
 				Model:     point.Model,
