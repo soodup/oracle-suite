@@ -1,4 +1,4 @@
-name: Publish Docker Image 2
+name: Publish Submodule Docker Image
 on:
   workflow_call:
     inputs:
@@ -15,7 +15,7 @@ on:
         required: false
         default: ''
       application:
-        description: 'Application Name (lowercase)'
+        description: 'Application Name (lowercase, same as subdir)'
         type: choice
         required: true
         options:
@@ -65,7 +65,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./${{ inputs.application }}
-          file: ./Dockerfile
+          file: ./${{ inputs.application }}/Dockerfile
           build-args: |
             APP_NAME=${{ inputs.application }}
             APP_VERSION=${{ inputs.version != '' && inputs.version || steps.meta.outputs.version }}

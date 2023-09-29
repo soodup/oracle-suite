@@ -16,31 +16,7 @@
 package service
 
 import (
-	"context"
-
-	"github.com/libp2p/go-libp2p"
-	"github.com/libp2p/go-libp2p-kad-dht"
-	"github.com/libp2p/go-libp2p-kad-dht/dual"
-	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/core/routing"
+	"github.com/libp2p/go-libp2p-pubsub"
 )
 
-func Bootstrap(ctx context.Context, boots ...peer.AddrInfo) libp2p.Option {
-	return libp2p.Routing(func(host host.Host) (routing.PeerRouting, error) {
-		if len(boots) == 0 {
-			return nil, nil
-		}
-		log.Infow("creating DHT router", "boots", boots)
-		return dual.New(
-			ctx, host,
-			dual.DHTOption(
-				dht.Mode(dht.ModeAutoServer),
-			),
-			dual.WanDHTOption(
-				dht.BootstrapPeers(boots...),
-				dht.Mode(dht.ModeAutoServer),
-			),
-		)
-	})
-}
+type Mesh func(sub *pubsub.PubSub) error
