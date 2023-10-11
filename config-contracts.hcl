@@ -60,7 +60,7 @@ contracts = [
     "wat": "ETH/USD",
     "IScribeOptimistic": true,
     "address": "0x5E16CA75000fb2B9d7B1184Fa24fF5D938a345Ef",
-    "challenge_period": 3600,
+    "challenge_period": 1200,
     "poke": {
       "spread": 1,
       "expiration": 32400,
@@ -80,7 +80,7 @@ contracts = [
     "wat": "MKR/USD",
     "IScribeOptimistic": true,
     "address": "0xb400027B7C31D67982199Fa48B8228F128691fCb",
-    "challenge_period": 3600,
+    "challenge_period": 1200,
     "poke": {
       "spread": 1,
       "expiration": 32400,
@@ -100,7 +100,7 @@ contracts = [
     "wat": "RETH/USD",
     "IScribeOptimistic": true,
     "address": "0x608D9cD5aC613EBAC4549E6b8A73954eA64C3660",
-    "challenge_period": 3600,
+    "challenge_period": 1200,
     "poke": {
       "spread": 1,
       "expiration": 32400,
@@ -120,7 +120,7 @@ contracts = [
     "wat": "WSTETH/USD",
     "IScribeOptimistic": true,
     "address": "0x013C5C46db9914A19A58E57AD539eD5B125aFA15",
-    "challenge_period": 3600,
+    "challenge_period": 1200,
     "poke": {
       "spread": 1,
       "expiration": 32400,
