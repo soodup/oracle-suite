@@ -3,11 +3,12 @@ RUN apk --no-cache add git gcc libc-dev linux-headers
 
 WORKDIR /app
 
-COPY go.mod go.sum version.go ./
+COPY go.mod go.sum ./
 RUN go mod download -x && mkdir -p ./dist
 
 COPY cmd ./cmd
 COPY pkg ./pkg
+COPY *.go *.hcl ./
 
 ARG APP_VERSION="0.0.0-dev.0"
 ARG APP_NAME
