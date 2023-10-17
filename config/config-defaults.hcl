@@ -67,5 +67,5 @@ variables {
 
 morph {
   cache_path = env("CFG_MORPH_CACHE_PATH", "~/config-morph.hcl")
-  interval = tonumber(env("CFG_MORPH_REFRESH_INTERVAL", "60"))
+  interval = tonumber(env("CFG_MORPH_REFRESH_INTERVAL", "3600"))
 }

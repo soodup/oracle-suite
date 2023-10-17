@@ -37,3 +37,8 @@ transport {
     ethereum_key      = "key1"
   }
 }
+
+morph {
+  cache_path = "~/config-morph.hcl"
+  interval = 60
+}

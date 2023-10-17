@@ -60,7 +60,6 @@ func (c *Config) ConfigureMorph(d Dependencies) (*Morph, error) {
 			Summary:  "Validation error",
 			Detail:   "Interval cannot be zero",
 			Severity: hcl.DiagError,
-			Subject:  c.Content.Attributes["interval"].Range.Ptr(),
 		}}
 	}
 
