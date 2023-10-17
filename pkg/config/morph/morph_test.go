@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	suite "github.com/chronicleprotocol/oracle-suite"
+	"github.com/chronicleprotocol/oracle-suite/config"
 	feedConfig "github.com/chronicleprotocol/oracle-suite/pkg/config/feednext"
 	"github.com/chronicleprotocol/oracle-suite/pkg/log/null"
 	"github.com/chronicleprotocol/oracle-suite/pkg/util/timeutil"
@@ -37,12 +37,12 @@ type morphTest struct {
 
 func (morphTest) DefaultEmbeds() [][]byte {
 	return [][]byte{
-		suite.ConfigContracts,
-		suite.ConfigDefaults,
-		suite.ConfigGhost,
-		suite.ConfigGofer,
-		suite.ConfigEthereum,
-		suite.ConfigTransport,
+		config.Defaults,
+		config.Contracts,
+		config.Ethereum,
+		config.Transport,
+		config.Gofer,
+		config.Ghost,
 	}
 }
 
