@@ -26,6 +26,7 @@ import (
 	ethereumConfig "github.com/chronicleprotocol/oracle-suite/pkg/config/ethereum"
 	feedConfig "github.com/chronicleprotocol/oracle-suite/pkg/config/feednext"
 	loggerConfig "github.com/chronicleprotocol/oracle-suite/pkg/config/logger"
+	morphConfig "github.com/chronicleprotocol/oracle-suite/pkg/config/morph"
 	transportConfig "github.com/chronicleprotocol/oracle-suite/pkg/config/transport"
 	"github.com/chronicleprotocol/oracle-suite/pkg/feed"
 	"github.com/chronicleprotocol/oracle-suite/pkg/log"
@@ -37,6 +38,7 @@ import (
 
 // Config is the configuration for Ghost.
 type Config struct {
+	Morph     morphConfig.Config     `hcl:"morph,block"`
 	Ghost     feedConfig.Config      `hcl:"ghost,block"`
 	Gofer     configGoferNext.Config `hcl:"gofer,block"`
 	Ethereum  ethereumConfig.Config  `hcl:"ethereum,block"`
@@ -110,9 +112,23 @@ func (c *Config) Services(baseLogger log.Logger, appName string, appVersion stri
 	if err != nil {
 		return nil, err
 	}
+	var alternative Config
+	morph, err := c.Morph.ConfigureMorph(morphConfig.Dependencies{
+		BaseConfig: &alternative,
+		Handlers: []morphConfig.Handler{
+			{
+				Service: feedService,
+				Wanted:  &alternative.Ghost.DataModels,
+			}},
+		Logger: logger,
+	})
+	if err != nil {
+		return nil, err
+	}
 	return &Services{
 		Feed:      feedService,
 		Transport: transport,
+		Morph:     morph,
 		Logger:    logger,
 	}, nil
 }
@@ -121,6 +137,7 @@ func (c *Config) Services(baseLogger log.Logger, appName string, appVersion stri
 type Services struct {
 	Feed      *feed.Feed
 	Transport pkgTransport.Service
+	Morph     *morphConfig.Morph
 	Logger    log.Logger
 
 	supervisor *pkgSupervisor.Supervisor
@@ -132,7 +149,7 @@ func (s *Services) Start(ctx context.Context) error {
 		return fmt.Errorf("services already started")
 	}
 	s.supervisor = pkgSupervisor.New(s.Logger)
-	s.supervisor.Watch(s.Transport, s.Feed)
+	s.supervisor.Watch(s.Transport, s.Feed, s.Morph)
 	if l, ok := s.Logger.(pkgSupervisor.Service); ok {
 		s.supervisor.Watch(l)
 	}

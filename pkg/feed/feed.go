@@ -19,15 +19,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/chronicleprotocol/oracle-suite/pkg/datapoint"
+	"github.com/chronicleprotocol/oracle-suite/pkg/log"
 	"github.com/chronicleprotocol/oracle-suite/pkg/log/null"
+	"github.com/chronicleprotocol/oracle-suite/pkg/transport"
 	"github.com/chronicleprotocol/oracle-suite/pkg/transport/messages"
 	"github.com/chronicleprotocol/oracle-suite/pkg/util/sliceutil"
 	"github.com/chronicleprotocol/oracle-suite/pkg/util/timeutil"
-
-	"github.com/chronicleprotocol/oracle-suite/pkg/log"
-	"github.com/chronicleprotocol/oracle-suite/pkg/transport"
 )
 
 const LoggerTag = "FEED"
@@ -266,4 +266,15 @@ func (f *Feed) contextCancelHandler() {
 	defer func() { close(f.waitCh) }()
 	defer f.log.Info("Stopped")
 	<-f.ctx.Done()
+}
+
+func (f *Feed) UpdateConfig(wanted any) error {
+	// Replace data models with base config's
+	var dataModels *[]string
+	dataModels, ok := wanted.(*[]string)
+	if !ok {
+		return fmt.Errorf("data models was not provided from base")
+	}
+	f.dataModels = *dataModels
+	return nil
 }
