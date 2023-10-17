@@ -102,6 +102,10 @@ func (m *Morph) Wait() <-chan error {
 }
 
 func (m *Morph) ForceUpdate() error {
+	if _, err := os.Stat(m.morphFile); os.IsNotExist(err) {
+		return err
+	}
+
 	// Load env variables from external file
 	var vars EnvVarsConfig
 	err := config.LoadFiles(&vars, []string{m.morphFile})
@@ -109,7 +113,7 @@ func (m *Morph) ForceUpdate() error {
 		m.log.
 			WithError(err).
 			WithField("cache_path", m.morphFile).
-			Error("Failed loading local config cache")
+			Warn("Failed loading local config cache")
 		return err
 	}
 
