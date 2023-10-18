@@ -33,12 +33,13 @@ import (
 
 func NewStreamCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.Command {
 	var raw bool
+	var cacheConfigPath string
 	cc := &cobra.Command{
 		Use:   "stream [TOPIC...]",
 		Args:  cobra.MinimumNArgs(0),
 		Short: "Streams data from the network",
 		RunE: func(cc *cobra.Command, topics []string) (err error) {
-			if err := f.Load(c); err != nil {
+			if err := f.Load(c, cacheConfigPath); err != nil {
 				return err
 			}
 			logger := l.Logger()
@@ -107,6 +108,8 @@ func NewStreamCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobr
 		NewStreamPricesCmd(c, f, l),
 		NewTopicsCmd(),
 	)
+	cc.Flags().
+		StringVar(&cacheConfigPath, "config-cache", "config-morph.hcl", "cache config file")
 	cc.Flags().BoolVar(
 		&raw,
 		"raw",
@@ -135,12 +138,13 @@ func NewTopicsCmd() *cobra.Command {
 
 func NewStreamPricesCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.Command {
 	var legacy bool
+	var cacheConfigPath string
 	cc := &cobra.Command{
 		Use:   "prices",
 		Args:  cobra.ExactArgs(0),
 		Short: "Prints price messages as they are received",
 		RunE: func(cc *cobra.Command, _ []string) (err error) {
-			if err := f.Load(c); err != nil {
+			if err := f.Load(c, cacheConfigPath); err != nil {
 				return err
 			}
 			ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -177,6 +181,8 @@ func NewStreamPricesCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags)
 			}
 		},
 	}
+	cc.Flags().
+		StringVar(&cacheConfigPath, "config-cache", "config-morph.hcl", "cache config file")
 	cc.Flags().BoolVar(
 		&legacy,
 		"legacy",

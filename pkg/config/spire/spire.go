@@ -18,7 +18,6 @@ package spire
 import (
 	"context"
 	"fmt"
-
 	"github.com/defiweb/go-eth/crypto"
 	"github.com/defiweb/go-eth/types"
 	"github.com/hashicorp/hcl/v2"

@@ -18,7 +18,6 @@ package ghostnext
 import (
 	"context"
 	"fmt"
-
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/chronicleprotocol/oracle-suite/config"

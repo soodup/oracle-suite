@@ -29,6 +29,7 @@ import (
 func ConfigFlagsForConfig(d config.HasDefaults) ConfigFlags {
 	return ConfigFlagsWithEmbeds(d.DefaultEmbeds()...)
 }
+
 func ConfigFlagsWithEmbeds(embeds ...[]byte) ConfigFlags {
 	return ConfigFlags{
 		embeds: embeds,
@@ -42,14 +43,26 @@ type ConfigFlags struct {
 }
 
 // Load loads the config files into the given config struct.
-func (ff *ConfigFlags) Load(c any) error {
-	if len(ff.paths) == 0 {
+func (ff *ConfigFlags) Load(c any, cacheConfigPath string) error {
+	if len(ff.embeds) == 0 && len(ff.paths) == 0 && cacheConfigPath == "" {
+		return fmt.Errorf("failed in loading config")
+	}
+	if len(ff.embeds) > 0 {
 		if err := config.LoadEmbeds(c, ff.embeds); err != nil {
 			return err
 		}
-	} else {
+	}
+	if len(ff.paths) > 0 {
 		if err := config.LoadFiles(c, ff.paths); err != nil {
 			return err
+		}
+	}
+	if cacheConfigPath != "" {
+		if err := config.LoadFiles(c, []string{cacheConfigPath}); err != nil {
+			fmt.Println("failed in load cache config", cacheConfigPath)
+			if len(ff.embeds) == 0 && len(ff.paths) == 0 { // Nothing config loaded
+				return err
+			}
 		}
 	}
 	switch {

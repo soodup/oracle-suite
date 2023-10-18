@@ -43,12 +43,13 @@ func NewPullCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.
 }
 
 func NewPullPriceCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.Command {
-	return &cobra.Command{
+	var cacheConfigPath string
+	cc := &cobra.Command{
 		Use:   "price ASSET_PAIR FEED",
 		Args:  cobra.ExactArgs(2),
 		Short: "Pulls latest price for a given pair and feed",
 		RunE: func(cc *cobra.Command, args []string) error {
-			if err := f.Load(c); err != nil {
+			if err := f.Load(c, cacheConfigPath); err != nil {
 				return fmt.Errorf(`config error: %w`, err)
 			}
 			ctx, ctxCancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -80,6 +81,9 @@ func NewPullPriceCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *c
 			return err
 		},
 	}
+	cc.Flags().
+		StringVar(&cacheConfigPath, "config-cache", "config-morph.hcl", "cache config file")
+	return cc
 }
 
 type pullPricesOptions struct {
@@ -89,12 +93,13 @@ type pullPricesOptions struct {
 
 func NewPullPricesCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.Command {
 	var pullPricesOpts pullPricesOptions
+	var cacheConfigPath string
 	cc := &cobra.Command{
 		Use:   "prices",
 		Args:  cobra.ExactArgs(0),
 		Short: "Pulls all prices",
 		RunE: func(cc *cobra.Command, args []string) (err error) {
-			if err := f.Load(c); err != nil {
+			if err := f.Load(c, cacheConfigPath); err != nil {
 				return err
 			}
 			ctx, ctxCancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -123,6 +128,8 @@ func NewPullPricesCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *
 			return
 		},
 	}
+	cc.Flags().
+		StringVar(&cacheConfigPath, "config-cache", "config-morph.hcl", "cache config file")
 	cc.PersistentFlags().StringVar(
 		&pullPricesOpts.FilterFrom,
 		"filter.from",

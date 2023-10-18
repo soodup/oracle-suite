@@ -40,13 +40,14 @@ type BootstrapConfig struct {
 }
 
 func NewBootstrapCmd(c *BootstrapConfig, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.Command {
-	return &cobra.Command{
+	var cacheConfigPath string
+	cc := &cobra.Command{
 		Use:     "bootstrap",
 		Args:    cobra.ExactArgs(0),
 		Aliases: []string{"boot"},
 		Short:   "Starts bootstrap node",
 		RunE: func(cc *cobra.Command, _ []string) error {
-			if err := f.Load(c); err != nil {
+			if err := f.Load(c, cacheConfigPath); err != nil {
 				return fmt.Errorf(`config error: %w`, err)
 			}
 			ll, err := c.Logger.Logger(logger.Dependencies{
@@ -79,4 +80,7 @@ func NewBootstrapCmd(c *BootstrapConfig, f *cmd.ConfigFlags, l *cmd.LoggerFlags)
 			return <-s.Wait()
 		},
 	}
+	cc.Flags().
+		StringVar(&cacheConfigPath, "config-cache", "config-morph.hcl", "cache config file")
+	return cc
 }

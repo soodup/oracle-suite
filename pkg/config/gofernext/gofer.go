@@ -18,9 +18,8 @@ package gofer
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	"github.com/hashicorp/hcl/v2"
+	"net/http"
 
 	"github.com/chronicleprotocol/oracle-suite/config"
 	dataproviderConfig "github.com/chronicleprotocol/oracle-suite/pkg/config/dataprovider"

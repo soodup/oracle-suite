@@ -36,13 +36,14 @@ import (
 
 func NewDataCmd(c supervisor.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.Command {
 	var format formatTypeValue
+	var cacheConfigPath string
 	cc := &cobra.Command{
 		Use:     "data [MODEL...]",
 		Aliases: []string{"price", "prices"},
 		Args:    cobra.MinimumNArgs(0),
 		Short:   "Return data points for given models",
 		RunE: func(cc *cobra.Command, args []string) (err error) {
-			if err := f.Load(c); err != nil {
+			if err := f.Load(c, cacheConfigPath); err != nil {
 				return err
 			}
 			services, err := c.Services(l.Logger(), cc.Root().Use, cc.Root().Version)
@@ -70,6 +71,8 @@ func NewDataCmd(c supervisor.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *co
 			return nil
 		},
 	}
+	cc.Flags().
+		StringVar(&cacheConfigPath, "config-cache", "config-morph.hcl", "cache config file")
 	cc.Flags().VarP(
 		&format,
 		"format",

@@ -41,12 +41,13 @@ func NewPushCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.
 }
 
 func NewPushPriceCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *cobra.Command {
-	return &cobra.Command{
+	var cacheConfigPath string
+	cc := &cobra.Command{
 		Use:   "price",
 		Args:  cobra.MaximumNArgs(1),
 		Short: "Push a data point message to the network",
 		RunE: func(cc *cobra.Command, args []string) (err error) {
-			if err := f.Load(c); err != nil {
+			if err := f.Load(c, cacheConfigPath); err != nil {
 				return err
 			}
 			ctx, ctxCancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -88,4 +89,7 @@ func NewPushPriceCmd(c *spire.Config, f *cmd.ConfigFlags, l *cmd.LoggerFlags) *c
 			return
 		},
 	}
+	cc.Flags().
+		StringVar(&cacheConfigPath, "config-cache", "config-morph.hcl", "cache config file")
+	return cc
 }

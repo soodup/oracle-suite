@@ -22,12 +22,11 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/ext/dynblock"
 	"github.com/hashicorp/hcl/v2/ext/tryfunc"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
-
-	"github.com/hashicorp/hcl/v2/ext/dynblock"
 
 	"github.com/chronicleprotocol/oracle-suite/pkg/util/globals"
 	utilHCL "github.com/chronicleprotocol/oracle-suite/pkg/util/hcl"

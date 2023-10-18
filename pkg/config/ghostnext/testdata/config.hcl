@@ -39,6 +39,6 @@ transport {
 }
 
 morph {
-  cache_path = "~/config-morph.hcl"
+  cache_path = "config-morph.hcl"
   interval = 60
 }

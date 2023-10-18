@@ -42,13 +42,14 @@ func NewRootCommand(name, version string, sets ...FlagSetter) *cobra.Command {
 }
 
 func NewRunCmd(c supervisor.Config, f *ConfigFlags, l *LoggerFlags) *cobra.Command {
-	return &cobra.Command{
+	var cacheConfigPath string
+	cc := &cobra.Command{
 		Use:     "run",
 		Args:    cobra.NoArgs,
 		Short:   "Run the main service",
 		Aliases: []string{"agent", "server"},
 		RunE: func(cc *cobra.Command, _ []string) error {
-			if err := f.Load(c); err != nil {
+			if err := f.Load(c, cacheConfigPath); err != nil {
 				return err
 			}
 			s, err := c.Services(l.Logger(), cc.Root().Use, cc.Root().Version)
@@ -62,6 +63,9 @@ func NewRunCmd(c supervisor.Config, f *ConfigFlags, l *LoggerFlags) *cobra.Comma
 			return <-s.Wait()
 		},
 	}
+	cc.Flags().
+		StringVar(&cacheConfigPath, "config-cache", "config-morph.hcl", "cache config file")
+	return cc
 }
 
 type FlagSetter interface {
