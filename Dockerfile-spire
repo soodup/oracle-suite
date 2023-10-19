@@ -13,4 +13,7 @@ WORKDIR /root
 COPY --from=builder /go/src/spire/dist/ /usr/local/bin/
 EXPOSE 9100
 EXPOSE 8000
+
+COPY ./config.hcl .
+
 ENTRYPOINT ["/usr/local/bin/spire"]

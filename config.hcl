@@ -1,32 +1,11 @@
 variables {
   # List of feeds that are allowed to send price updates and event attestations.
   feeds = [
-    "0xDA1d2961Da837891f43235FddF66BAD26f41368b",
-    "0x4b0E327C08e23dD08cb87Ec994915a5375619aa2",
-    "0x75ef8432566A79C86BBF207A47df3963B8Cf0753",
-    "0x83e23C207a67a9f9cB680ce84869B91473403e7d",
-    "0xFbaF3a7eB4Ec2962bd1847687E56aAEE855F5D00",
-    "0xfeEd00AA3F0845AFE52Df9ECFE372549B74C69D2",
-    "0x71eCFF5261bAA115dcB1D9335c88678324b8A987",
-    "0x8ff6a38A1CD6a42cAac45F08eB0c802253f68dfD",
-    "0x16655369Eb59F3e1cAFBCfAC6D3Dd4001328f747",
-    "0xD09506dAC64aaA718b45346a032F934602e29cca",
-    "0xc00584B271F378A0169dd9e5b165c0945B4fE498",
-    "0x60da93D9903cb7d3eD450D4F81D402f7C4F71dd9",
-    "0xa580BBCB1Cee2BCec4De2Ea870D20a12A964819e",
-    "0xD27Fa2361bC2CfB9A591fb289244C538E190684B",
-    "0x8de9c5F1AC1D4d02bbfC25fD178f5DAA4D5B26dC",
-    "0xE6367a7Da2b20ecB94A25Ef06F3b551baB2682e6",
-    "0xA8EB82456ed9bAE55841529888cDE9152468635A",
-    "0x130431b4560Cd1d74A990AE86C337a33171FF3c6",
-    "0x8aFBD9c3D794eD8DF903b3468f4c4Ea85be953FB",
-    "0xd94BBe83b4a68940839cD151478852d16B3eF891",
-    "0xC9508E9E3Ccf319F5333A5B8c825418ABeC688BA",
-    "0x77EB6CF8d732fe4D92c427fCdd83142DB3B742f7",
-    "0x3CB645a8f10Fb7B0721eaBaE958F77a878441Cb9",
-    "0x4f95d9B4D842B2E2B1d1AC3f2Cf548B93Fd77c67",
-    "0xaC8519b3495d8A3E3E44c041521cF7aC3f8F63B3",
-    "0xd72BA9402E9f3Ff01959D6c841DDD13615FFff42"
+#    "0x16655369eb59f3e1cafbcfac6d3dd4001328f747",
+#    "0xfadad77b3a7e5a84a1f7ded081e785585d4ffaf3",
+#    "0x3980aa37f838bec2e457445d943feb3af98ff036",
+    "0x2d800d93b065ce011af83f316cef9f0d005b0aa4",
+    "0xe3ced0f62f7eb2856d37bed128d2b195712d2644"
   ]
 }
 
@@ -67,7 +46,7 @@ transport {
   libp2p {
     feeds           = var.feeds
     priv_key_seed   = try(env.CFG_LIBP2P_PK_SEED, "")
-    listen_addrs    = try(split(env.CFG_LIBP2P_LISTEN_ADDRS, ","), ["/ip4/0.0.0.0/tcp/8000"])
+    listen_addrs    = try(split(env.CFG_LIBP2P_LISTEN_ADDRS, ","), ["/ip4/0.0.0.0/tcp/8101"])
     bootstrap_addrs = try(split(env.CFG_LIBP2P_BOOTSTRAP_ADDRS, ","), [
       "/dns/spire-bootstrap1.makerops.services/tcp/8000/p2p/12D3KooWRfYU5FaY9SmJcRD5Ku7c1XMBRqV6oM4nsnGQ1QRakSJi",
       "/dns/spire-bootstrap2.makerops.services/tcp/8000/p2p/12D3KooWBGqjW4LuHUoYZUhbWW1PnDVRUvUEpc4qgWE3Yg9z1MoR"
@@ -112,39 +91,9 @@ spire {
 
   # List of pairs that are collected by the spire node. Other pairs are ignored.
   pairs = [
-    "AAVEUSD",
-    "AVAXUSD",
-    "BALUSD",
-    "BATUSD",
     "BTCUSD",
-    "COMPUSD",
-    "CRVUSD",
-    "DOTUSD",
     "ETHBTC",
-    "ETHUSD",
-    "FILUSD",
-    "GNOUSD",
-    "IBTAUSD",
-    "LINKUSD",
-    "LRCUSD",
-    "MANAUSD",
-    "MKRETH",
-    "MKRUSD",
-    "PAXGUSD",
-    "RETHUSD",
-    "SNXUSD",
-    "SOLUSD",
-    "UNIUSD",
-    "USDTUSD",
-    "WNXMUSD",
-    "XRPUSD",
-    "XTZUSD",
-    "YFIUSD",
-    "ZECUSD",
-    "ZRXUSD",
-    "STETHUSD",
-    "WSTETHUSD",
-    "MATICUSD"
+    "ETHUSD"
   ]
 }
 

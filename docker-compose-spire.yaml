@@ -1,0 +1,51 @@
+version: "3.8"
+services:
+  spire:
+    image: upshot-spire
+    container_name: spire_feed.local
+    build:
+      context: "."
+    ports:
+      - "8101:8000"
+      - "9101:9100"
+    entrypoint: [ "/usr/local/bin/spire" ]
+    command: [ "agent", "-v", "info" ]
+    volumes:
+      - "./1.json:/root/keystore/1.json"
+      - "./pass:/root/keystore/password"
+    environment:
+      CFG_ETH_FROM: "0x2d800d93b065ce011af83f316cef9f0d005b0aa4"
+      CFG_ETH_KEYS: "/root/keystore"
+      CFG_ETH_PASS: "/root/keystore/password"
+#      CFG_LIBP2P_PK_SEED: "d382e2b16d8a2e770dd8e0b65554a2ce7a072ac67d4ca6f34052771dfdcdac07"
+#      CFG_LIBP2P_LISTEN_ADDRS: "/ip4/0.0.0.0/tcp/8101"
+      CFG_SPIRE_RPC_ADDR: "0.0.0.0:9101"
+#      CFG_FEEDS: "0x1bb90cde8a032cb4963813a5b4db4981afa5b9c6,0xfadad77b3a7e5a84a1f7ded081e785585d4ffaf3,0x3980aa37f838bec2e457445d943feb3af98ff036"
+
+  spire2:
+    image: upshot-spire
+    container_name: spire_feed_2.local
+    build:
+      context: "."
+    ports:
+      - "8102:8000"
+      - "9102:9100"
+    entrypoint: [ "/usr/local/bin/spire" ]
+    command: [ "agent", "-v", "info" ]
+    volumes:
+      - "./2.json:/root/keystore/2.json"
+      - "./pass:/root/keystore/password"
+      - "./config2.hcl:/root/config.hcl"
+    environment:
+      CFG_ETH_FROM: "0xe3ced0f62f7eb2856d37bed128d2b195712d2644"
+      CFG_ETH_KEYS: "/root/keystore"
+      CFG_ETH_PASS: "/root/keystore/password"
+#      CFG_LIBP2P_PK_SEED: "d382e2b16d8a2e770dd8e0b65554a2ce7a072ac67d4ca6f34052771dfdcdac07"
+#      CFG_LIBP2P_LISTEN_ADDRS: "/ip4/0.0.0.0/tcp/8102"
+      CFG_SPIRE_RPC_ADDR: "0.0.0.0:9102"
+#      CFG_FEEDS: "0x1bb90cde8a032cb4963813a5b4db4981afa5b9c6,0xfadad77b3a7e5a84a1f7ded081e785585d4ffaf3,0x3980aa37f838bec2e457445d943feb3af98ff036"
+
+
+networks:
+  default:
+    name: omnia_network
