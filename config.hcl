@@ -157,8 +157,8 @@ gofer {
     min_sources = 1
   }
 
-  price_model "cryptopunks/xyz" "median" {
-    source "cryptopunks/xyz" "origin" { origin = "upshot" }
+  price_model "cryptopunks/appraisal" "median" {
+    source "cryptopunks/appraisal" "origin" { origin = "upshot" }
     min_sources = 1
   }
 

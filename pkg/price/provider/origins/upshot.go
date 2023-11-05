@@ -85,13 +85,13 @@ func (o *IUpshot) callOne(pair Pair) (*Price, error) {
 		return nil, fmt.Errorf("failed to parse price from upshot origin %s", res.Body)
 	}
 
-	timestamp, err := strconv.ParseInt(data.AvgAppraisal.Timestamp, 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse timestamp from upshot origin %s", res.Body)
-	}
+	//timestamp, err := strconv.ParseInt(data.AvgAppraisal.Timestamp, 10, 64)
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to parse timestamp from upshot origin %s", res.Body)
+	//}
 	return &Price{
 		Pair:      pair,
 		Price:     wei,
-		Timestamp: time.Unix(timestamp, 0),
+		Timestamp: time.Now(),
 	}, nil
 }
