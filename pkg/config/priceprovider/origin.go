@@ -234,6 +234,13 @@ func NewHandler(
 	case "ishares":
 		baseURL := parseSingleParam(params, "url")
 		return origins.NewBaseExchangeHandler(origins.IShares{WorkerPool: wp, BaseURL: baseURL}, aliases), nil
+	case "upshot":
+		baseURL := parseSingleParam(params, "url")
+		apiKey := parseSingleParam(params, "api_key")
+		return origins.NewBaseExchangeHandler(
+			origins.IUpshot{WorkerPool: wp, BaseURL: baseURL, APIKey: apiKey},
+			aliases,
+		), nil
 	}
 
 	return nil, origins.ErrUnknownOrigin
