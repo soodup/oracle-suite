@@ -148,7 +148,7 @@ gofer {
   origin "upshot" {
     type   = "upshot"
     params = {
-      api_key = "UP-0d9ed54694abdac60fd23b74"
+      api_key = try(env.GOFER_UPSHOT_API_KEY, "UP-0d9ed54694abdac60fd23b74")
     }
   }
 

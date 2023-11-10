@@ -33,10 +33,13 @@ type IUpshot struct {
 }
 
 func (o IUpshot) localPairName(pair Pair) string {
-	return pair.Base
+	return pair.Base + pair.Quote
 }
 
 func (o IUpshot) getURL(pair Pair) string {
+	if pair.Quote == "appraisal" {
+		return buildOriginURL(collectionAppraisalURL, o.BaseURL, upshotBaseURL, pair.Base)
+	}
 	return buildOriginURL(collectionAppraisalURL, o.BaseURL, upshotBaseURL, o.localPairName(pair))
 }
 
