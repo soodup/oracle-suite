@@ -59,8 +59,10 @@ func DefaultOriginSet(pool query.WorkerPool) *Set {
 5.) Release a new tag to use it in omnia-feed and omnia-relay service
 
 
+Sample PR -> https://github.com/soodup/oracle-suite/compare/e4314aeaec5686f040aebf9e5b1a02de44fc092f...soodup:oracle-suite:upshot
 
 
-Supported origins:
+
+Gofer Supported origins:
 - `upshot` - [Upshot](https://docs.upshot.xyz/reference/)
 
