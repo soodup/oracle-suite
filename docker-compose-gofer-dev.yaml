@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  gofer:
+    container_name: gofer.local
+    image: upshot-oracle-suite-gofer:latest
+    build:
+      context: "."
+    ports:
+      - "9000:9000"
+    entrypoint: [ "/usr/local/bin/gofer" ]
+    command: [ "agent", "-v", "info" ]
+
+networks:
+  default:
+    name: omnia_network
