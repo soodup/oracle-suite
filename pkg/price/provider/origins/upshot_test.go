@@ -28,7 +28,7 @@ func (suite *UpshotSuite) SetupSuite() {
 
 func (suite *UpshotSuite) TestLocalPair() {
 	ex := suite.origin.ExchangeHandler.(IUpshot)
-	suite.EqualValues("cryptopunks", ex.localPairName(Pair{Base: "cryptopunks", Quote: ""}))
+	suite.EqualValues("cryptopunks", ex.localPairName(Pair{Base: "cryptopunks", Quote: "appraisal"}))
 	suite.EqualValues("BAYC", ex.localPairName(Pair{Base: "BAYC", Quote: ""}))
 }
 
@@ -87,7 +87,7 @@ func (suite *UpshotSuite) TestFailOnWrongInput() {
 }
 
 func (suite *UpshotSuite) TestSuccessResponse() {
-	pairCryptopunks := Pair{Base: "cryptopunks", Quote: ""}
+	pairCryptopunks := Pair{Base: "cryptopunks", Quote: "appraisal"}
 
 	resp := &query.HTTPResponse{
 		Body: []byte(`
@@ -132,7 +132,7 @@ func (suite *UpshotSuite) TestRealAPICall() {
 			APIKey:     "UP-0d9ed54694abdac60fd23b74",
 		}, nil),
 		[]Pair{
-			{Base: "cryptopunks", Quote: "xyz"},
+			{Base: "cryptopunks", Quote: "appraisal"},
 		},
 	)
 }

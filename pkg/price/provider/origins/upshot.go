@@ -83,6 +83,8 @@ func (o *IUpshot) callOne(pair Pair) (*Price, error) {
 
 	data := resp.Data[0]
 
+	data.AvgAppraisal.Timestamp = strconv.FormatInt(time.Now().UnixMilli(), 10)
+
 	wei, err := strconv.ParseFloat(data.AvgAppraisal.Wei, 64)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse price from upshot origin %s", res.Body)
