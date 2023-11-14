@@ -40,7 +40,7 @@ func (o IUpshot) getURL(pair Pair) string {
 	if pair.Quote == "appraisal" {
 		return buildOriginURL(collectionAppraisalURL, o.BaseURL, upshotBaseURL, pair.Base)
 	}
-	return buildOriginURL(collectionAppraisalURL, o.BaseURL, upshotBaseURL, o.localPairName(pair))
+	return buildOriginURL(collectionAppraisalURL, o.BaseURL, upshotBaseURL, pair.Base)
 }
 
 func (o IUpshot) Pool() query.WorkerPool {
